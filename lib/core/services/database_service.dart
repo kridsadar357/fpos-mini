@@ -891,7 +891,7 @@ class DatabaseService {
       'tts_enabled': 'true',
       'tts_language': 'th-TH',
       'backup_cloud_enabled': 'false',
-      'backup_cloud_endpoint': '',
+      'backup_cloud_endpoint': AppConstants.cloudBackupEndpoint,
       'backup_cloud_token': '',
       'auto_local_backup_enabled': 'true',
       'last_local_backup_at': '',

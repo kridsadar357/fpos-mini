@@ -8,10 +8,11 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
-import '../../data/repositories/settings_repository.dart';
 import '../constants/app_constants.dart';
+import '../../data/repositories/settings_repository.dart';
 import 'database_import_report.dart';
 import 'database_service.dart';
+import 'license_service.dart';
 
 class LocalBackupInfo {
   final String path;
@@ -243,6 +244,22 @@ class BackupService {
     );
   }
 
+  Future<({String endpoint, String token})> _resolveCloudCredentials() async {
+    final repo = SettingsRepository();
+    var endpoint =
+        await repo.get('backup_cloud_endpoint', defaultValue: '');
+    if (endpoint.isEmpty) {
+      endpoint = AppConstants.cloudBackupEndpoint;
+    }
+
+    var token = await repo.get('backup_cloud_token', defaultValue: '');
+    if (token.isEmpty) {
+      token = await repo.get('license_key', defaultValue: '');
+    }
+
+    return (endpoint: endpoint, token: token);
+  }
+
   Future<XFile?> exportLocal() async {
     final info = await saveToLocalStorage();
     if (info == null) return null;
@@ -416,13 +433,23 @@ class BackupService {
         (await repo.get('backup_cloud_enabled', defaultValue: 'false')) ==
             'true';
     if (!enabled) return (ok: false, message: 'Cloud backup disabled');
-    final endpoint =
-        await repo.get('backup_cloud_endpoint', defaultValue: '');
-    final token = await repo.get('backup_cloud_token', defaultValue: '');
+
+    final creds = await _resolveCloudCredentials();
+    final endpoint = creds.endpoint;
+    final token = creds.token;
     if (endpoint.isEmpty) {
       await _recordCloudFailure('ยังไม่ได้ตั้งค่า endpoint');
       return (ok: false, message: 'No endpoint configured');
     }
+    if (token.isEmpty) {
+      await _recordCloudFailure('ยังไม่ได้ตั้งค่า Product Key / Token');
+      return (
+        ok: false,
+        message: 'กรุณากรอก Product Key ในหน้า License หรือ Token สำรองคลาวด์',
+      );
+    }
+
+    final deviceId = await LicenseService.instance.getDeviceId();
 
     LocalBackupInfo? localInfo;
     if (requireLocalFirst) {
@@ -457,11 +484,12 @@ class BackupService {
               Uri.parse(endpoint),
               headers: {
                 'Content-Type': 'application/octet-stream',
-                if (token.isNotEmpty) 'Authorization': 'Bearer $token',
+                'Authorization': 'Bearer $token',
                 'X-Backup-Source': 'fuel-pos',
                 'X-Backup-Name': localInfo.name,
                 'X-Backup-Schema': '${DatabaseService.schemaVersion}',
                 'X-Backup-Attempt': '$attempt',
+                'X-Device-Id': deviceId,
               },
               body: bytes,
             )

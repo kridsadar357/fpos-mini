@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/constants/app_constants.dart';
 import '../../../core/constants/license_features.dart';
 import '../../../core/services/backup_service.dart';
 import '../../../core/services/database_service.dart';
@@ -60,8 +61,12 @@ class _BackupSettingsScreenState extends State<BackupSettingsScreen> {
       _cloudEnabled = (all['backup_cloud_enabled'] ?? 'false') == 'true';
       _autoLocalEnabled =
           (all['auto_local_backup_enabled'] ?? 'true') == 'true';
-      _endpoint.text = all['backup_cloud_endpoint'] ?? '';
-      _token.text = all['backup_cloud_token'] ?? '';
+      _endpoint.text = all['backup_cloud_endpoint']?.trim().isNotEmpty == true
+          ? all['backup_cloud_endpoint']!.trim()
+          : AppConstants.cloudBackupEndpoint;
+      _token.text = all['backup_cloud_token']?.trim().isNotEmpty == true
+          ? all['backup_cloud_token']!.trim()
+          : (all['license_key'] ?? '');
       _lastBackup = all['last_local_backup_at'] ?? '-';
       _cloudStatus = all['last_cloud_backup_status'] ?? '-';
       _cloudError = all['last_cloud_backup_error'] ?? '';
@@ -578,7 +583,8 @@ class _BackupSettingsScreenState extends State<BackupSettingsScreen> {
               decoration: InputDecoration(
                 isDense: true,
                 labelText: 'URL (HTTPS)',
-                hintText: 'https://your-server/backup',
+                hintText: AppConstants.cloudBackupEndpoint,
+                helperText: 'Token = Product Key (License) อัตโนมัติถ้าว่าง',
                 labelStyle: TextStyle(fontSize: r.sp(11)),
               ),
             ),
@@ -589,7 +595,8 @@ class _BackupSettingsScreenState extends State<BackupSettingsScreen> {
               style: TextStyle(fontSize: r.sp(12)),
               decoration: InputDecoration(
                 isDense: true,
-                labelText: 'Token (ไม่บังคับ)',
+                labelText: 'Token (Product Key)',
+                helperText: 'ใช้ License Key เป็น Bearer token',
                 labelStyle: TextStyle(fontSize: r.sp(11)),
               ),
             ),

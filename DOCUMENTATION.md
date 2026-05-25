@@ -255,7 +255,7 @@ Header POS → ปุ่ม 「ปิดกะ #xxx」
 - Restore: validate → pre-restore backup → replace DB → verify schema
 - **Auto-restore:** ถ้า startup health ล้มเหลว Splash แนะนำกู้คืนจาก backup ล่าสุดในเครื่อง
 - **Backup health:** แจ้งเตือนถ้าไม่ได้สำรอง > `AppConstants.backupWarnDays` (3 วัน) — SnackBar บน POS + banner ในหน้าสำรองข้อมูล
-- **Cloud backup (Pro+):** สร้าง local ก่อน → อัปโหลด HTTPS พร้อม retry 3 ครั้ง / timeout 60s → บันทึก `last_cloud_backup_status` และ error
+- **Cloud backup (Pro+):** สร้าง local ก่อน → POST `https://ttmb-tech.com/license/backup` พร้อม `Authorization: Bearer {Product Key}` → retry 3 ครั้ง / timeout 60s
 
 ### 6. รับน้ำมันเข้าถัง / ปรับยอดถัง
 
@@ -274,7 +274,7 @@ Header POS → ปุ่ม 「ปิดกะ #xxx」
 | Global error handler | `AppErrorService` → `app_errors.log` |
 | Startup health | ตรวจ schema ก่อนใช้งาน; ล้มเหลว → แนะนำ restore |
 | Backup verify + health | ตรวจไฟล์หลัง export; แจ้ง backup ล้าสมัย (> 3 วัน) |
-| Cloud backup retry | local ก่อน upload, retry×3, บันทึกสถานะ/error |
+| Cloud backup retry | local ก่อน upload, Bearer = Product Key, retry×3 |
 | License grace | ทำงาน offline ได้ภายใน grace period (7 วัน) |
 | Printer retry | ลด failure จาก Bluetooth ชั่วคราว (retry×3) |
 

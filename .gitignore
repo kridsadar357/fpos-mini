@@ -22,6 +22,10 @@ ios/Podfile [0-9].lock
 ios/Flutter/* [0-9].*
 ios/Flutter/flutter_export_environment [0-9].sh
 
+# Backend — uploaded backup files (not in git)
+backend_license/storage/backups/*
+!backend_license/storage/backups/.gitkeep
+
 # IntelliJ related
 *.iml
 *.ipr
