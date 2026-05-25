@@ -15,6 +15,12 @@ migrate_working_dir/
 .flutter-plugins-dependencies 3
 .flutter-plugins-dependencies 4
 .flutter-plugins-dependencies 5
+*.db
+build_log*.txt
+ios_build_log.txt
+ios/Podfile [0-9].lock
+ios/Flutter/* [0-9].*
+ios/Flutter/flutter_export_environment [0-9].sh
 
 # IntelliJ related
 *.iml

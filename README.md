@@ -2,6 +2,9 @@
 
 แอป POS สำหรับปั๊มน้ำมัน รองรับมือถือ/แท็บเล็ต พิมพ์ใบเสร็จ Bluetooth (ESC/POS 58/80 mm) เสียง TTS ภาษาไทย และสำรองข้อมูล
 
+**Repository:** https://github.com/kridsadar357/fpos-mini  
+**เอกสารเทคนิค:** [DOCUMENTATION.md](DOCUMENTATION.md) · **คู่มือผู้ใช้:** [docs/USER_MANUAL.md](docs/USER_MANUAL.md)
+
 ## โฟลว์หลัก (หลัง Login)
 
 ```
@@ -34,7 +37,7 @@ Login
 ## ฟีเจอร์สำคัญ
 
 - **แดชบอร์ดเดียว** — ขายน้ำมัน แขวนบิล ฟลีทการ์ด ทะเบียนรถ พิมพ์สลิป / รีปริ้นท์
-- **SQLite WAL** — schema v2 (สินค้า ลูกค้า บิลพัก  audit_log)
+- **SQLite WAL** — schema v13 (สินค้า ลูกค้า บิลพัก audit_log รับน้ำมัน)
 - **เครื่องพิมพ์** — `print_bluetooth_thermal` + `esc_pos_utils` แม่แบบใบเสร็จ JSON ปรับได้
 - **TTS** — ยืนยันเสียง (ปิดได้จากหลังบ้าน)
 - **Session timeout** — 30 นาที
@@ -63,7 +66,7 @@ Login
 flutter pub get
 flutter run
 flutter analyze
-flutter test
+flutter test --concurrency=1 test/
 flutter build apk --release
 ```
 
