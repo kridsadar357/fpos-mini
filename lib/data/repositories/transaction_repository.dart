@@ -461,6 +461,71 @@ class TransactionRepository {
     return rows.map(Transaction.fromMap).toList();
   }
 
+  Future<SalesPeriodSummary> salesPeriodSummary({
+    required DateTime from,
+    required DateTime to,
+  }) async {
+    final start = DateTime(from.year, from.month, from.day);
+    final end = DateTime(to.year, to.month, to.day, 23, 59, 59, 999);
+    final txs = await listBetween(start, end);
+
+    double total = 0;
+    double liters = 0;
+    double fuelTotal = 0;
+    double productTotal = 0;
+    int fuelCount = 0;
+    int productCount = 0;
+    final byPayment = <String, double>{};
+    final byFuel = <int, double>{};
+    final byDay = <DateTime, DailySalesBucket>{};
+
+    for (final t in txs) {
+      total += t.total;
+      byPayment[t.paymentMethod] = (byPayment[t.paymentMethod] ?? 0) + t.total;
+
+      final dayKey = DateTime(
+        t.createdAt.year,
+        t.createdAt.month,
+        t.createdAt.day,
+      );
+      final bucket = byDay.putIfAbsent(
+        dayKey,
+        () => DailySalesBucket(date: dayKey, total: 0, count: 0),
+      );
+      bucket.total += t.total;
+      bucket.count++;
+
+      if (t.isProductSale) {
+        productTotal += t.total;
+        productCount++;
+      } else {
+        fuelTotal += t.total;
+        fuelCount++;
+        liters += t.liters;
+        byFuel[t.fuelTypeId] = (byFuel[t.fuelTypeId] ?? 0) + t.total;
+      }
+    }
+
+    final dayList = byDay.values.toList()
+      ..sort((a, b) => b.date.compareTo(a.date));
+
+    return SalesPeriodSummary(
+      from: start,
+      to: DateTime(to.year, to.month, to.day),
+      count: txs.length,
+      total: total,
+      liters: liters,
+      fuelCount: fuelCount,
+      productCount: productCount,
+      fuelTotal: fuelTotal,
+      productTotal: productTotal,
+      byPayment: byPayment,
+      byFuel: byFuel,
+      byDay: dayList,
+      transactions: txs,
+    );
+  }
+
   Future<DailySummary> dailySummary(DateTime day) async {
     final txs = await listByDate(day);
     double total = 0;
@@ -627,6 +692,50 @@ class DailySummary {
     required this.byPayment,
     required this.byFuel,
     this.byShift = const [],
+    required this.transactions,
+  });
+}
+
+class DailySalesBucket {
+  double total;
+  int count;
+  final DateTime date;
+
+  DailySalesBucket({
+    required this.date,
+    required this.total,
+    required this.count,
+  });
+}
+
+class SalesPeriodSummary {
+  final DateTime from;
+  final DateTime to;
+  final int count;
+  final double total;
+  final double liters;
+  final int fuelCount;
+  final int productCount;
+  final double fuelTotal;
+  final double productTotal;
+  final Map<String, double> byPayment;
+  final Map<int, double> byFuel;
+  final List<DailySalesBucket> byDay;
+  final List<Transaction> transactions;
+
+  const SalesPeriodSummary({
+    required this.from,
+    required this.to,
+    required this.count,
+    required this.total,
+    required this.liters,
+    this.fuelCount = 0,
+    this.productCount = 0,
+    this.fuelTotal = 0,
+    this.productTotal = 0,
+    required this.byPayment,
+    required this.byFuel,
+    required this.byDay,
     required this.transactions,
   });
 }

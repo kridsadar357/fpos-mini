@@ -22,4 +22,19 @@ class Fmt {
   static String dateTime(DateTime d) => _dateTime.format(d);
   static String displayDate(DateTime d) => _displayDate.format(d);
   static String receiptDate(DateTime d) => _receiptDate.format(d);
+
+  static String paymentMethod(String code) {
+    switch (code) {
+      case 'CASH':
+        return 'เงินสด';
+      case 'TRANSFER':
+        return 'โอน';
+      case 'QR':
+        return 'QR';
+      case 'CARD':
+        return 'บัตร';
+      default:
+        return code;
+    }
+  }
 }

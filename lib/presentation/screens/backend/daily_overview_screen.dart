@@ -341,20 +341,7 @@ class _DailyOverviewScreenState extends State<DailyOverviewScreen> {
   }
 }
 
-String paymentLabel(String code) {
-  switch (code) {
-    case 'CASH':
-      return 'เงินสด';
-    case 'TRANSFER':
-      return 'โอน';
-    case 'QR':
-      return 'QR';
-    case 'CARD':
-      return 'บัตร';
-    default:
-      return code;
-  }
-}
+String paymentLabel(String code) => Fmt.paymentMethod(code);
 
 class _KpiGrid extends StatelessWidget {
   final DailySummary summary;

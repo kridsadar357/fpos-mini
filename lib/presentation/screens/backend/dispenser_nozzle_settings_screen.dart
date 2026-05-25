@@ -388,42 +388,109 @@ class _DispenserNozzleSettingsScreenState
                         active: activeCount,
                       ),
                       SizedBox(height: r.h(10)),
-                      GridView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: cols,
-                          mainAxisSpacing: r.h(8),
-                          crossAxisSpacing: r.w(8),
-                          childAspectRatio: wide ? 1.35 : 1.05,
-                        ),
-                        itemCount: _dispensers.length,
-                        itemBuilder: (_, i) {
-                          final d = _dispensers[i];
-                          final nozzles = d.id != null
-                              ? (_nozzlesByDispenser[d.id!] ?? [])
-                              : <Map<String, dynamic>>[];
-                          return _DispenserCard(
-                            dispenser: d,
-                            nozzles: nozzles,
-                            onToggle: (v) async {
-                              if (d.id == null) return;
-                              await _repo.updateDispenser(d.id!, isActive: v);
-                              await _load();
-                            },
-                            onRename: () => _renameDispenser(d),
-                            onDelete: () => _confirmDeleteDispenser(d),
-                            onAddNozzle: () => _addNozzle(d),
-                            onEditNozzle: (n) => _editNozzle(d, n),
-                            onDeleteNozzle: _deleteNozzle,
-                          );
+                      _DispenserGrid(
+                        r: r,
+                        cols: cols,
+                        dispensers: _dispensers,
+                        nozzlesByDispenser: _nozzlesByDispenser,
+                        onToggle: (d, v) async {
+                          if (d.id == null) return;
+                          await _repo.updateDispenser(d.id!, isActive: v);
+                          await _load();
                         },
+                        onRename: _renameDispenser,
+                        onDelete: _confirmDeleteDispenser,
+                        onAddNozzle: _addNozzle,
+                        onEditNozzle: _editNozzle,
+                        onDeleteNozzle: _deleteNozzle,
                       ),
                     ],
                   );
                 },
               ),
             ),
+    );
+  }
+}
+
+class _DispenserGrid extends StatelessWidget {
+  final Responsive r;
+  final int cols;
+  final List<Dispenser> dispensers;
+  final Map<int, List<Map<String, dynamic>>> nozzlesByDispenser;
+  final Future<void> Function(Dispenser d, bool v) onToggle;
+  final Future<void> Function(Dispenser d) onRename;
+  final Future<void> Function(Dispenser d) onDelete;
+  final Future<void> Function(Dispenser d) onAddNozzle;
+  final Future<void> Function(Dispenser d, Map<String, dynamic> n)
+      onEditNozzle;
+  final Future<void> Function(Map<String, dynamic> n) onDeleteNozzle;
+
+  const _DispenserGrid({
+    required this.r,
+    required this.cols,
+    required this.dispensers,
+    required this.nozzlesByDispenser,
+    required this.onToggle,
+    required this.onRename,
+    required this.onDelete,
+    required this.onAddNozzle,
+    required this.onEditNozzle,
+    required this.onDeleteNozzle,
+  });
+
+  Widget _cardFor(Dispenser d) {
+    final nozzles = d.id != null
+        ? (nozzlesByDispenser[d.id!] ?? [])
+        : <Map<String, dynamic>>[];
+    return _DispenserCard(
+      dispenser: d,
+      nozzles: nozzles,
+      onToggle: (v) => onToggle(d, v),
+      onRename: () => onRename(d),
+      onDelete: () => onDelete(d),
+      onAddNozzle: () => onAddNozzle(d),
+      onEditNozzle: (n) => onEditNozzle(d, n),
+      onDeleteNozzle: onDeleteNozzle,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (cols <= 1) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (var i = 0; i < dispensers.length; i++) ...[
+            if (i > 0) SizedBox(height: r.h(8)),
+            _cardFor(dispensers[i]),
+          ],
+        ],
+      );
+    }
+
+    final rows = <Widget>[];
+    for (var i = 0; i < dispensers.length; i += cols) {
+      if (i > 0) rows.add(SizedBox(height: r.h(8)));
+      rows.add(
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            for (var j = 0; j < cols; j++) ...[
+              if (j > 0) SizedBox(width: r.w(8)),
+              Expanded(
+                child: i + j < dispensers.length
+                    ? _cardFor(dispensers[i + j])
+                    : const SizedBox.shrink(),
+              ),
+            ],
+          ],
+        ),
+      );
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: rows,
     );
   }
 }
@@ -525,15 +592,11 @@ class _DispenserCard extends StatelessWidget {
     return GlassCard(
       padding: EdgeInsets.zero,
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Container(
+          Padding(
             padding: EdgeInsets.fromLTRB(r.w(10), r.h(8), r.w(4), r.h(8)),
-            decoration: BoxDecoration(
-              border: Border(
-                left: BorderSide(color: accent, width: 4),
-              ),
-            ),
             child: Row(
               children: [
                 Container(
@@ -632,63 +695,57 @@ class _DispenserCard extends StatelessWidget {
               ],
             ),
           ),
-          Expanded(
-            child: Padding(
-              padding: EdgeInsets.fromLTRB(r.w(10), 0, r.w(10), r.h(8)),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Expanded(
-                    child: nozzles.isEmpty
-                        ? Center(
-                            child: Text(
-                              'ยังไม่มีมือจ่าย',
-                              style: TextStyle(
-                                color: AppColors.greyMedium,
-                                fontSize: r.sp(11),
-                              ),
-                            ),
-                          )
-                        : ListView.separated(
-                            padding: EdgeInsets.zero,
-                            itemCount: nozzles.length,
-                            separatorBuilder: (_, __) =>
-                                SizedBox(height: r.h(4)),
-                            itemBuilder: (_, i) {
-                              final n = nozzles[i];
-                              return _NozzleTile(
-                                nozzle: n,
-                                r: r,
-                                onEdit: () => onEditNozzle(n),
-                                onDelete: () => onDeleteNozzle(n),
-                              );
-                            },
-                          ),
-                  ),
-                  SizedBox(
-                    height: r.h(32),
-                    child: OutlinedButton.icon(
-                      onPressed: onAddNozzle,
-                      icon: Icon(Icons.add_rounded, size: r.sp(14)),
-                      label: Text(
-                        'เพิ่มมือจ่าย',
-                        style: TextStyle(
-                          fontSize: r.sp(10),
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: AppColors.corporateBlue,
-                        side: BorderSide(
-                          color: AppColors.corporateBlue
-                              .withValues(alpha: 0.35),
-                        ),
-                        padding: EdgeInsets.symmetric(horizontal: r.w(8)),
+          Padding(
+            padding: EdgeInsets.fromLTRB(r.w(10), 0, r.w(10), r.h(8)),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (nozzles.isEmpty)
+                  Padding(
+                    padding: EdgeInsets.symmetric(vertical: r.h(8)),
+                    child: Text(
+                      'ยังไม่มีมือจ่าย',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: AppColors.greyMedium,
+                        fontSize: r.sp(11),
                       ),
                     ),
+                  )
+                else
+                  for (var i = 0; i < nozzles.length; i++) ...[
+                    if (i > 0) SizedBox(height: r.h(4)),
+                    _NozzleTile(
+                      nozzle: nozzles[i],
+                      r: r,
+                      onEdit: () => onEditNozzle(nozzles[i]),
+                      onDelete: () => onDeleteNozzle(nozzles[i]),
+                    ),
+                  ],
+                SizedBox(height: r.h(6)),
+                SizedBox(
+                  height: r.h(30),
+                  child: OutlinedButton.icon(
+                    onPressed: onAddNozzle,
+                    icon: Icon(Icons.add_rounded, size: r.sp(14)),
+                    label: Text(
+                      'เพิ่มมือจ่าย',
+                      style: TextStyle(
+                        fontSize: r.sp(10),
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.corporateBlue,
+                      side: BorderSide(
+                        color:
+                            AppColors.corporateBlue.withValues(alpha: 0.35),
+                      ),
+                      padding: EdgeInsets.symmetric(horizontal: r.w(8)),
+                    ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ],
