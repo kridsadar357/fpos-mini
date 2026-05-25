@@ -5,7 +5,6 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/license_features.dart';
 import '../../../core/utils/responsive.dart';
 import '../../providers/app_state.dart';
-import '../../widgets/glass_card.dart';
 import '../../widgets/pos_header.dart';
 import 'audit_log_screen.dart';
 import 'backup_settings_screen.dart';

@@ -344,7 +344,7 @@ class _GeneralSettingsScreenState extends State<GeneralSettingsScreen> {
             icon: Icons.cloud_circle_outlined,
             label: 'Cloud token',
             value: _hasLicenseToken
-                ? '${_licenseTokenHint} (พร้อมสำรองคลาวด์)'
+                ? '$_licenseTokenHint (พร้อมสำรองคลาวด์)'
                 : 'ยังไม่มี — กดตรวจสอบ License ใหม่',
           ),
           if (_licenseCustomer.isNotEmpty) ...[

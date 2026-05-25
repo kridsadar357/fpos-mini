@@ -71,6 +71,7 @@ class _PosDashboardScreenState extends State<PosDashboardScreen> {
   void initState() {
     super.initState();
     SessionService.instance.bind(onTimeout: _handleLogout);
+    unawaited(BluetoothPrinterService.instance.init());
     _loadData();
     _timer = Timer.periodic(const Duration(minutes: 1), (_) => _updateTime());
     _updateTime();
@@ -373,6 +374,7 @@ class _PosDashboardScreenState extends State<PosDashboardScreen> {
 
     state.setShift(null);
     await AuthSessionService.instance.clearShiftId();
+    if (!mounted) return;
 
     if (outcome == CloseShiftOutcome.openedNewShift) {
       final newShift = await OpenShiftDialog.show(context, userId: user.id);
@@ -387,6 +389,7 @@ class _PosDashboardScreenState extends State<PosDashboardScreen> {
         userId: user.id,
         shiftId: newShift.id,
       );
+      if (!mounted) return;
       ToastUtils.show(context, 'เปิดกะ #${newShift.id} แล้ว');
       return;
     }

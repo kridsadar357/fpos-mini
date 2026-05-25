@@ -364,7 +364,9 @@ flutter test --concurrency=1 [test files…]
 
 ```bash
 flutter pub get
-flutter run
+# อย่าใช้ `flutter run` เปล่า — มักค้างสแกน iPad wireless; ระบุ device เสมอ:
+./scripts/run.sh emulator-5554
+./scripts/run_ios_release.sh -d <ipad-id>
 flutter analyze
 flutter test --concurrency=1 test/
 ```
@@ -375,8 +377,19 @@ flutter test --concurrency=1 test/
 
 ### หมายเหตุการพัฒนา
 
-- **อย่า** `flutter clean` บน Desktop project ถ้าไม่จำเป็น
-- iOS: หลีกเลี่ยง `xattr -cr .` ทั้งโปรเจกต์
+- **อย่า** `flutter clean` บน Desktop project ถ้าไม่จำเป็น — ถ้าจำเป็น ให้ `rm -f build/ios` ก่อน (ลบ symlink) แล้วค่อย clean
+- **Flutter SDK เดียวเท่านั้น:** สคริปต์ iOS ใช้ `/opt/homebrew/share/flutter` ผ่าน `scripts/flutter_env.sh` — อย่า mix กับ `~/develop/flutter` (build จะ error `SemanticsFlags` / `hasCheckedState`)
+- iOS บน Desktop: macOS ใส่ `com.apple.provenance` ทำให้ codesign ล้ม — ใช้สคริปต์ redirect build ไป `/tmp`:
+  ```bash
+  ./scripts/run_ios.sh -d <device-id>              # debug (hot reload) — ต้องอนุญาต Automation
+  ./scripts/run_ios_release.sh -d <device-id>        # release — ไม่ค้าง Installing and launching
+  ./scripts/install_ios.sh [device-id]             # ติดตั้งแล้วเปิดแอปบน iPad เอง
+  ./scripts/stop_ios_app.sh [kill|uninstall|force] # บังคับปิด / ถอนแอปเมื่อ iPad ค้าง
+  ./scripts/prepare_ios_build.sh                   # ก่อน build/run ทุกครั้ง
+  ```
+- **อย่า** `xattr -cr` บนโฟลเดอร์ `build/` หรือ `BUILT_PRODUCTS_DIR` หลัง codesign — จะทำให้ `Info.plist` invalid และติดตั้ง iPad ไม่ได้
+- **`flutter run` ค้างที่ Installing and launching:** มักเกิดจาก (1) ไม่ได้อนุญาต Terminal/Cursor ควบคุม Xcode → Settings → Privacy & Security → **Automation** (2) ใช้ wireless แทน USB → ใช้ `--device-connection attached` (3) ใช้ `./scripts/run_ios_release.sh` แทน debug
+- iOS: หลีกเลี่ยง `xattr -cr .` ทั้งโปรเจกต์ (จะทำให้ Pods พัง)
 - Default admin: `admin` / `admin123` (เปลี่ยนใน production)
 
 ---

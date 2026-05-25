@@ -1,6 +1,8 @@
 import '../constants/app_colors.dart';
 import 'package:flutter/material.dart';
 
+import 'text_match_util.dart';
+
 Color? _parseHexColor(String? hex) {
   if (hex == null || hex.isEmpty) return null;
   try {
@@ -54,8 +56,8 @@ Color fuelColorForTank({
 
 /// ชื่อสั้นสำหรับปุ่มมือจ่าย (ไม่ให้ข้อความถูกตัด)
 String shortFuelLabel(String name) {
-  final m = RegExp(r'(\d{2,3}|B\d+|E\d+)').firstMatch(name);
-  if (m != null) return m.group(1)!;
+  final token = fuelShortToken(name);
+  if (token != null) return token;
   if (name.contains('ดีเซล')) return 'ดีเซล';
   if (name.contains('91')) return '91';
   if (name.contains('95')) return '95';

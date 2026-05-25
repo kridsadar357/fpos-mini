@@ -87,7 +87,7 @@ void main() {
   test('evaluateBackupHealth marks stale when last backup is old', () async {
     final repo = SettingsRepository();
     final old = DateTime.now().subtract(
-      Duration(days: AppConstants.backupWarnDays + 2),
+      const Duration(days: AppConstants.backupWarnDays + 2),
     );
     await repo.set('last_local_backup_at', old.toIso8601String());
 

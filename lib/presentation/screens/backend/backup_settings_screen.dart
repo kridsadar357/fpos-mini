@@ -114,6 +114,7 @@ class _BackupSettingsScreenState extends State<BackupSettingsScreen> {
         final userId = context.read<AppState>().user?.id;
         await DatabaseService.instance.audit(userId, 'backup',
             details: info.name);
+        if (!mounted) return;
         ToastUtils.show(context, 'บันทึกสำรองในเครื่องแล้ว');
       }
       await _load();

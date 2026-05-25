@@ -20,11 +20,8 @@ Future<void> main() async {
     DeviceOrientation.landscapeRight,
   ]);
 
-  // Hide system UI for full-screen POS experience (immersive sticky)
-  SystemChrome.setEnabledSystemUIMode(
-    SystemUiMode.edgeToEdge,
-    overlays: [SystemUiOverlay.top],
-  );
+  // Keep status bar + home indicator visible so iPad is never "trapped" in the app.
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
 
   runApp(const FuelPosApp());
 }

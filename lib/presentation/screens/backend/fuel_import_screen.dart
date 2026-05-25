@@ -227,7 +227,7 @@ class _FuelImportScreenState extends State<FuelImportScreen> {
           ],
           Padding(
             padding: EdgeInsets.symmetric(vertical: r.h(4)),
-            child: Divider(height: 1, color: AppColors.greyLight),
+            child: const Divider(height: 1, color: AppColors.greyLight),
           ),
           Text(
             'รายการ (${batch.lineCount})',
@@ -1016,7 +1016,7 @@ class _ReceiptConfirmDialogState extends State<_ReceiptConfirmDialog> {
                     if (hasMoney && totalMoney != null)
                       _SummaryRow(
                         label: 'ยอดเงินรวม',
-                        value: Fmt.money(totalMoney!),
+                        value: Fmt.money(totalMoney),
                         r: r,
                         valueColor: AppColors.corporateBlueDark,
                         bold: true,
@@ -1207,7 +1207,7 @@ class _ReceiptLineCard extends StatelessWidget {
                     ),
                     if (lineCost != null)
                       Text(
-                        'ยอด ${Fmt.money(lineCost!)}',
+                        'ยอด ${Fmt.money(lineCost)}',
                         style: TextStyle(
                           fontSize: r.sp(9),
                           fontWeight: FontWeight.w800,

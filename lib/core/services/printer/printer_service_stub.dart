@@ -55,7 +55,7 @@ class BluetoothPrinterService {
 
   String get paperSizeLabel => '80 mm';
 
-  Future<void> init() async {}
+  Future<void> init({bool connectOnStartup = false}) async {}
 
   Future<void> loadPaperSize() async {}
 

@@ -13,7 +13,9 @@ import '../../core/services/database_import_report.dart';
 import '../../core/services/database_service.dart';
 import '../../core/services/license_service.dart';
 import '../../core/services/setup_draft_service.dart';
+import '../../core/services/splash_init_cache.dart';
 import '../../core/utils/responsive.dart';
+import '../../core/utils/text_match_util.dart';
 import '../../core/utils/toast_utils.dart';
 import '../../data/repositories/settings_repository.dart';
 import '../widgets/app_logo.dart';
@@ -265,6 +267,7 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
         _licenseCustomerName = res['customer_name']?.toString();
       });
       await _persistDraft(step: _licenseStepIndex);
+      if (!mounted) return;
       ToastUtils.show(
         context,
         'ยืนยัน License สำเร็จ${_licenseCustomerName != null ? ' — $_licenseCustomerName' : ''}',
@@ -374,6 +377,7 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
     }
     if (_currentStep == _licenseStepIndex && !_licenseVerified) {
       await _persistDraft(step: _licenseStepIndex);
+      if (!mounted) return;
       ToastUtils.show(context, 'ต้องยืนยัน License ก่อนใช้งาน — บันทึกความคืบหน้าแล้ว');
       SystemNavigator.pop();
       return;
@@ -565,6 +569,7 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
       });
 
       await _settings.set('is_initialized', 'true');
+      await SplashInitCache.write(true);
       await SetupDraftService.instance.clear();
 
       if (!mounted) return;
@@ -618,8 +623,8 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
     for (final t in _tanks) {
       if (t['name']?.toString() == tankName) {
         final name = _fuelNameFor(t);
-        final match = RegExp(r'\d+').firstMatch(name);
-        if (match != null) return match.group(0)!;
+        final digits = firstDigitSequence(name);
+        if (digits != null) return digits;
         if (name.length <= 12) return name;
         return name.substring(0, 12);
       }
@@ -1189,7 +1194,7 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  _SectionLabel(
+                  const _SectionLabel(
                     icon: Icons.corporate_fare_rounded,
                     title: 'ข้อมูลนิติบุคคล',
                     hint: 'แสดงบนใบกำกับภาษีเต็มรูป',
@@ -1251,7 +1256,7 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  _SectionLabel(
+                  const _SectionLabel(
                     icon: Icons.receipt_long_rounded,
                     title: 'ใบเสร็จ & แบรนด์',
                     hint: 'ข้อความท้ายใบและโลโก้สถานี',
@@ -1461,7 +1466,7 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
       step: 3,
       child: Column(
         children: [
-          _InfoStrip(
+          const _InfoStrip(
             icon: Icons.tips_and_updates_outlined,
             text: 'เลือกได้ภายหลัง — เปิดใช้เมนูตะกร้าสินค้าในแดชบอร์ด',
             dense: true,
@@ -1517,7 +1522,7 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
           if (_printerConnected)
             Padding(
               padding: EdgeInsets.only(top: r.h(6)),
-              child: _StatusChip(
+              child: const _StatusChip(
                 icon: Icons.check_circle_rounded,
                 label: 'เชื่อมต่อเครื่องพิมพ์แล้ว',
                 color: AppColors.success,
@@ -1526,7 +1531,7 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
           else if (_printerSkipped)
             Padding(
               padding: EdgeInsets.only(top: r.h(6)),
-              child: _StatusChip(
+              child: const _StatusChip(
                 icon: Icons.schedule_rounded,
                 label: 'ตั้งค่าเครื่องพิมพ์ภายหลังได้',
                 color: AppColors.corporateBlue,
@@ -1535,7 +1540,7 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
           SizedBox(height: r.h(6)),
           Expanded(
             child: devices.isEmpty
-                ? _EmptyState(
+                ? const _EmptyState(
                     icon: Icons.print_disabled_outlined,
                     title: 'ยังไม่พบเครื่องพิมพ์',
                     subtitle: 'เปิด Bluetooth และจับคู่เครื่องพิมพ์ก่อน',
@@ -1581,7 +1586,7 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
           child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _AlertBanner(
+          const _AlertBanner(
             icon: Icons.shield_outlined,
             text: 'บังคับยืนยัน — ออกก่อนยืนยันจะบันทึก draft แล้วปิดแอป',
             tone: _AlertTone.warning,
@@ -1621,7 +1626,7 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _SectionLabel(
+              const _SectionLabel(
                 icon: Icons.admin_panel_settings_outlined,
                 title: 'บัญชีผู้ดูแลระบบ',
                 hint: 'ใช้เข้าสู่ระบบและตั้งค่าระบบทั้งหมด',
@@ -1682,7 +1687,7 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
                 ),
               ],
               gap,
-              _InfoStrip(
+              const _InfoStrip(
                 icon: Icons.security_rounded,
                 text: 'เก็บรหัสผ่านเป็นความลับ — สามารถเปลี่ยนได้ในหน้าตั้งค่า',
               ),
@@ -2469,8 +2474,8 @@ class _EmptyState extends StatelessWidget {
                       child: InkWell(
                         onTap: onAction,
                         borderRadius: BorderRadius.circular(8),
-                        child: Padding(
-                          padding: const EdgeInsets.all(8),
+                        child: const Padding(
+                          padding: EdgeInsets.all(8),
                           child: Icon(
                             Icons.add_rounded,
                             size: 20,
@@ -2714,16 +2719,12 @@ class _ListPager extends StatelessWidget {
   final int total;
   final VoidCallback? onPrev;
   final VoidCallback? onNext;
-  final VoidCallback? onAdd;
-  final String? addLabel;
 
   const _ListPager({
     required this.page,
     required this.total,
     this.onPrev,
     this.onNext,
-    this.onAdd,
-    this.addLabel,
   });
 
   @override
@@ -2746,19 +2747,6 @@ class _ListPager extends StatelessWidget {
             ),
           ),
           _IconBtn(icon: Icons.chevron_right, onTap: onNext),
-          if (onAdd != null) ...[
-            SizedBox(width: r.w(4)),
-            _IconBtn(icon: Icons.add, onTap: onAdd, accent: true),
-            if (addLabel != null)
-              Text(
-                addLabel!,
-                style: TextStyle(
-                  fontSize: r.sp(9),
-                  color: AppColors.corporateBlue,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-          ],
         ],
       ),
     );
@@ -2768,21 +2756,17 @@ class _ListPager extends StatelessWidget {
 class _IconBtn extends StatelessWidget {
   final IconData icon;
   final VoidCallback? onTap;
-  final bool accent;
 
   const _IconBtn({
     required this.icon,
     this.onTap,
-    this.accent = false,
   });
 
   @override
   Widget build(BuildContext context) {
     final enabled = onTap != null;
     return Material(
-      color: accent
-          ? AppColors.lightBlue
-          : (enabled ? AppColors.softWhite : AppColors.greyLight),
+      color: enabled ? AppColors.softWhite : AppColors.greyLight,
       borderRadius: BorderRadius.circular(6),
       child: InkWell(
         onTap: onTap,
@@ -2793,9 +2777,7 @@ class _IconBtn extends StatelessWidget {
           child: Icon(
             icon,
             size: 20,
-            color: enabled
-                ? (accent ? AppColors.corporateBlue : AppColors.greyDark)
-                : AppColors.greyMedium,
+            color: enabled ? AppColors.greyDark : AppColors.greyMedium,
           ),
         ),
       ),
@@ -3228,7 +3210,7 @@ class _DispenserPickPanel extends StatelessWidget {
       children: [
         Row(
           children: [
-            Icon(Icons.touch_app_outlined,
+            const Icon(Icons.touch_app_outlined,
                 size: 16, color: AppColors.corporateBlue),
             SizedBox(width: r.w(6)),
             Expanded(
@@ -3495,7 +3477,7 @@ class _NozzleConfigurePanel extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(Icons.storage_rounded,
+                const Icon(Icons.storage_rounded,
                     size: 16, color: AppColors.corporateBlue),
                 const SizedBox(width: 6),
                 Expanded(
@@ -3870,7 +3852,7 @@ class _NozzleGridCard extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.propane_tank_outlined,
+                    const Icon(Icons.propane_tank_outlined,
                         size: 12, color: AppColors.greyMedium),
                     const SizedBox(width: 3),
                     Flexible(
@@ -4289,7 +4271,7 @@ class _EditTankDialogContentState extends State<_EditTankDialogContent> {
         ),
         const SizedBox(height: 8),
         DropdownButtonFormField<int>(
-          value: _fuelIdx,
+          initialValue: _fuelIdx,
           isExpanded: true,
           decoration: const InputDecoration(
             labelText: 'ชนิดน้ำมันในถัง',

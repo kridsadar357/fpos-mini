@@ -367,7 +367,7 @@ class _FuelImportCreateScreenState extends State<FuelImportCreateScreen> {
           Expanded(
             flex: 4,
             child: DropdownButtonFormField<int>(
-              value: entry.tankId,
+              initialValue: entry.tankId,
               isDense: true,
               isExpanded: true,
               decoration: _inputDecoration.copyWith(

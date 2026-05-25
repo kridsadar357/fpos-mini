@@ -354,7 +354,7 @@ class _NewPromoSheetState extends State<_NewPromoSheet> {
               ),
               const SizedBox(height: 10),
               DropdownButtonFormField<String>(
-                value: _type,
+                initialValue: _type,
                 decoration: const InputDecoration(labelText: 'ประเภท'),
                 items: const [
                   DropdownMenuItem(value: 'percent', child: Text('ลด %')),
@@ -373,7 +373,7 @@ class _NewPromoSheetState extends State<_NewPromoSheet> {
               const SizedBox(height: 10),
               if (_isFreeProduct) ...[
                 DropdownButtonFormField<int>(
-                  value: _productId,
+                  initialValue: _productId,
                   decoration: const InputDecoration(labelText: 'สินค้าแถม'),
                   items: widget.products
                       .map(
@@ -435,7 +435,7 @@ class _NewPromoSheetState extends State<_NewPromoSheet> {
               ],
               const SizedBox(height: 10),
               DropdownButtonFormField<int?>(
-                value: _fuelId,
+                initialValue: _fuelId,
                 decoration:
                     const InputDecoration(labelText: 'ใช้กับน้ำมัน'),
                 items: [

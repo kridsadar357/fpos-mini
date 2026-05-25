@@ -45,13 +45,14 @@ class BluetoothPrinterService {
   PaperSize get paperSize => _paperSize;
   String get paperSizeLabel => _paperSize == PaperSize.mm58 ? '58 mm' : '80 mm';
 
-  /// Load saved paper width only — do not touch Bluetooth until permission granted.
-  Future<void> init() async {
+  /// Load saved settings. Bluetooth connect is deferred until first print.
+  Future<void> init({bool connectOnStartup = false}) async {
     await loadPaperSize();
     await ReceiptTemplateService.instance.load();
-    if (await hasBluetoothPermission()) {
-      await connectLastUsed();
-    }
+    if (!connectOnStartup || !await hasBluetoothPermission()) return;
+    try {
+      await connectLastUsed().timeout(connectTimeout, onTimeout: () => false);
+    } catch (_) {}
   }
 
   Future<void> loadPaperSize() async {
@@ -100,7 +101,8 @@ class BluetoothPrinterService {
     if (!await ensurePermissions()) return [];
     try {
       final List<BluetoothInfo> devices =
-          await PrintBluetoothThermal.pairedBluetooths;
+          await PrintBluetoothThermal.pairedBluetooths
+              .timeout(connectTimeout, onTimeout: () => <BluetoothInfo>[]);
       return devices
           .map((d) => BluetoothDevice(address: d.macAdress, name: d.name))
           .toList();

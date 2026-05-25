@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_tts/flutter_tts.dart';
 import '../../data/repositories/settings_repository.dart';
 
@@ -15,19 +17,23 @@ class TtsService {
 
   Future<void> init() async {
     try {
-      await _tts.awaitSpeakCompletion(true);
-      await _tts.setVolume(1.0);
-      await _tts.setSpeechRate(0.45);
-      await _tts.setPitch(1.0);
-
-      final repo = SettingsRepository();
-      _enabled = (await repo.get('tts_enabled', defaultValue: 'true')) == 'true';
-      _language = await repo.get('tts_language', defaultValue: 'th-TH');
-      await _tts.setLanguage(_language);
+      await _configure().timeout(const Duration(seconds: 5));
       _ready = true;
     } catch (_) {
       _ready = false;
     }
+  }
+
+  Future<void> _configure() async {
+    await _tts.awaitSpeakCompletion(true);
+    await _tts.setVolume(1.0);
+    await _tts.setSpeechRate(0.45);
+    await _tts.setPitch(1.0);
+
+    final repo = SettingsRepository();
+    _enabled = (await repo.get('tts_enabled', defaultValue: 'true')) == 'true';
+    _language = await repo.get('tts_language', defaultValue: 'th-TH');
+    await _tts.setLanguage(_language);
   }
 
   Future<void> reload() async {

@@ -138,7 +138,7 @@ class FuelDeliveryRepository {
   }
 
   Future<List<FuelDelivery>> listRecent({int limit = 200}) async {
-    final sql = '''
+    const sql = '''
       $_listSql
       ORDER BY d.created_at DESC, d.id DESC
       LIMIT ?
@@ -192,7 +192,7 @@ class FuelDeliveryRepository {
       listAllBatches(limit: limit);
 
   Future<FuelImportBatch?> getBatch(String batchKey) async {
-    final sql = '''
+    const sql = '''
       $_listSql
       WHERE d.batch_key = ?
       ORDER BY d.id ASC

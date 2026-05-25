@@ -285,7 +285,7 @@ class _DispenserStep extends StatelessWidget {
       children: [
         Row(
           children: [
-            Icon(Icons.touch_app_outlined,
+            const Icon(Icons.touch_app_outlined,
                 size: 15, color: AppColors.corporateBlue),
             SizedBox(width: r.w(6)),
             Expanded(
@@ -713,7 +713,7 @@ class _NozzleCell extends StatelessWidget {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.propane_tank_outlined,
+                      const Icon(Icons.propane_tank_outlined,
                           size: 11, color: AppColors.greyMedium),
                       const SizedBox(width: 3),
                       Flexible(

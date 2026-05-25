@@ -103,7 +103,7 @@ class _DashboardProductsScreenState extends State<DashboardProductsScreen> {
 
     final total = _cartTotal;
     final itemLabel =
-        '${_cart.length} รายการ • ${_cartQty} ชิ้น • ${Fmt.money(total)}';
+        '${_cart.length} รายการ • $_cartQty ชิ้น • ${Fmt.money(total)}';
 
     final method = await HighEndDialog.show<PaymentMethod>(
       context: context,
@@ -196,6 +196,7 @@ class _DashboardProductsScreenState extends State<DashboardProductsScreen> {
     if (!mounted) return;
     _clearCart();
     await _load();
+    if (!mounted) return;
     ToastUtils.show(
       context,
       shouldPrint

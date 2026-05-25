@@ -54,6 +54,7 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
     setState(() => _bluetoothGranted = granted);
     if (granted) {
       await _scan();
+      if (!mounted) return;
       ToastUtils.show(context, 'อนุญาต Bluetooth แล้ว');
     } else {
       ToastUtils.show(

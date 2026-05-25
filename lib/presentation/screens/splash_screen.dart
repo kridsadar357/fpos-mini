@@ -8,10 +8,10 @@ import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/services/backup_service.dart';
-import '../../core/services/bluetooth_printer_service.dart';
 import '../../core/services/auth_session_service.dart';
 import '../../core/services/database_service.dart';
 import '../../core/services/license_service.dart';
+import '../../core/services/splash_init_cache.dart';
 import '../../core/services/tts_service.dart';
 import '../../core/utils/formatter.dart';
 import '../../data/repositories/settings_repository.dart';
@@ -39,13 +39,29 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    _bootstrap();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) unawaited(_bootstrap());
+    });
+    // Hard exit — no async/DB; prevents full UI freeze if SQLite blocks the isolate.
+    Future.delayed(const Duration(milliseconds: 2500), _hardExitToLogin);
+  }
+
+  void _hardExitToLogin() {
+    if (!mounted || _navigated || _error != null) return;
+    _navigated = true;
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(builder: (_) => const LoginScreen()),
+    );
   }
 
   Future<void> _handleDbFailure(String message) async {
     LocalBackupInfo? latest;
     if (!kIsWeb) {
-      latest = await BackupService.instance.getLatestLocalBackup();
+      try {
+        latest = await BackupService.instance
+            .getLatestLocalBackup()
+            .timeout(const Duration(seconds: 3));
+      } catch (_) {}
     }
     if (!mounted) return;
     setState(() {
@@ -106,11 +122,17 @@ class _SplashScreenState extends State<SplashScreen> {
     if (elapsed < _minDisplay) {
       await Future.delayed(_minDisplay - elapsed);
     }
-    if (!mounted) return;
+    if (!mounted || _navigated) return;
+    await SplashInitCache.write(isInitialized);
+    await _navigateAway(isInitialized: isInitialized);
+  }
 
-    final next = isInitialized
-        ? const LoginScreen()
-        : const SetupWizardScreen();
+  Future<void> _navigateAway({required bool isInitialized}) async {
+    if (!mounted || _navigated) return;
+    _navigated = true;
+
+    final next =
+        isInitialized ? const LoginScreen() : const SetupWizardScreen();
 
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
@@ -123,76 +145,138 @@ class _SplashScreenState extends State<SplashScreen> {
     );
   }
 
+  Future<void> _exitSplashSafely() async {
+    if (_navigated || !mounted) return;
+    _hardExitToLogin();
+  }
+
   Future<void> _bootstrap() async {
+    if (_navigated) return;
     final started = DateTime.now();
+
+    Future.delayed(const Duration(seconds: 2), () {
+      if (mounted && !_navigated && _error == null) {
+        setState(() => _showSkip = true);
+      }
+    });
+
+    try {
+      await _runBootstrapSteps(
+        started: started,
+        onProgress: (step) {
+          if (mounted) setState(() => _status = step);
+        },
+      ).timeout(
+        const Duration(seconds: 12),
+        onTimeout: () => throw TimeoutException('เริ่มต้นระบบใช้เวลานานเกินไป'),
+      );
+    } on TimeoutException {
+      await _exitSplashSafely();
+    } catch (e) {
+      await _handleDbFailure('ฐานข้อมูลมีปัญหา: $e');
+    }
+  }
+
+  String _status = 'กำลังเริ่มต้นระบบ…';
+  bool _showSkip = false;
+  bool _navigated = false;
+
+  Future<void> _resolveLicenseInBackground() async {
+    try {
+      final verified =
+          (await SettingsRepository().get('license_verified', defaultValue: 'false')) ==
+              'true';
+      if (!verified) return;
+
+      final resolved = await LicenseService.instance
+          .resolveLicenseOnStartup()
+          .timeout(const Duration(seconds: 8));
+      if (!mounted) return;
+      context.read<AppState>().setLicenseType(resolved.licenseType);
+    } catch (_) {}
+  }
+
+  Future<void> _runBootstrapSteps({
+    required DateTime started,
+    void Function(String step)? onProgress,
+  }) async {
+    if (_navigated) return;
+
     bool isInitialized = false;
     String licenseType = 'free';
 
-    try {
-      await DatabaseService.instance.database;
-      final health = await DatabaseService.instance.startupHealthCheck();
-      if (!health.ok) {
-        await _handleDbFailure(health.message);
-        return;
-      }
-
-      await TtsService.instance.init();
-      BackupService.instance.init();
-      unawaited(BluetoothPrinterService.instance.init());
-
-      final settings = SettingsRepository();
-      isInitialized =
-          (await settings.get('is_initialized', defaultValue: 'false')) ==
-              'true';
-      licenseType = await LicenseService.instance.getLicenseType();
-      if ((await settings.get('license_verified', defaultValue: 'false')) ==
-          'true') {
-        final resolved = await LicenseService.instance.resolveLicenseOnStartup();
-        licenseType = resolved.licenseType;
-      }
-
-      if (mounted) {
-        context.read<AppState>().setLicenseType(licenseType);
-      }
-
-      if (isInitialized && mounted) {
-        final restored = await AuthSessionService.instance.tryRestoreLogin();
-        if (restored != null && mounted) {
-          final app = context.read<AppState>();
-          app.setUser(restored.user);
-          app.setShift(restored.shift);
-
-          if (!kIsWeb) {
-            unawaited(
-              BackupService.instance.scheduledAutoBackup().then((_) async {
-                await _applyBackupHealthWarning();
-              }),
-            );
-          }
-
-          final elapsed2 = DateTime.now().difference(started);
-          if (elapsed2 < _minDisplay) {
-            await Future.delayed(_minDisplay - elapsed2);
-          }
-          if (!mounted) return;
-          Navigator.of(context).pushReplacement(
-            PageRouteBuilder(
-              pageBuilder: (_, __, ___) => const PosDashboardScreen(),
-              transitionDuration: const Duration(milliseconds: 400),
-              transitionsBuilder: (_, animation, __, child) {
-                return FadeTransition(opacity: animation, child: child);
-              },
-            ),
-          );
-          return;
-        }
-      }
-    } catch (e) {
-      await _handleDbFailure('ฐานข้อมูลมีปัญหา: $e');
+    onProgress?.call('กำลังเปิดฐานข้อมูล…');
+    if (_navigated) return;
+    await DatabaseService.instance.database.timeout(
+      const Duration(seconds: 15),
+      onTimeout: () => throw TimeoutException('เปิดฐานข้อมูลช้าเกินไป'),
+    );
+    final health = await DatabaseService.instance
+        .startupHealthCheck()
+        .timeout(const Duration(seconds: 5));
+    if (!health.ok) {
+      if (!_navigated) await _handleDbFailure(health.message);
       return;
     }
 
+    if (_navigated) return;
+    onProgress?.call('กำลังเตรียมระบบ…');
+    BackupService.instance.init();
+    unawaited(TtsService.instance.init());
+
+    final settings = SettingsRepository();
+    isInitialized =
+        (await settings.get('is_initialized', defaultValue: 'false')) == 'true';
+    await SplashInitCache.write(isInitialized);
+    licenseType = await LicenseService.instance.getLicenseType();
+    unawaited(_resolveLicenseInBackground());
+
+    if (mounted) {
+      context.read<AppState>().setLicenseType(licenseType);
+    }
+
+    if (isInitialized && mounted) {
+      onProgress?.call('กำลังเข้าสู่ระบบ…');
+      final restored = await AuthSessionService.instance
+          .tryRestoreLogin()
+          .timeout(const Duration(seconds: 5), onTimeout: () => null);
+      if (restored != null && mounted) {
+        final app = context.read<AppState>();
+        app.setUser(restored.user);
+        app.setShift(restored.shift);
+
+        if (!kIsWeb) {
+          unawaited(
+            BackupService.instance.scheduledAutoBackup().then((_) async {
+              await _applyBackupHealthWarning();
+            }),
+          );
+        }
+
+        final elapsed2 = DateTime.now().difference(started);
+        if (elapsed2 < _minDisplay) {
+          await Future.delayed(_minDisplay - elapsed2);
+        }
+        if (!mounted || _navigated) return;
+        _navigated = true;
+        Navigator.of(context).pushReplacement(
+          PageRouteBuilder(
+            pageBuilder: (_, __, ___) => const PosDashboardScreen(),
+            transitionDuration: const Duration(milliseconds: 400),
+            transitionsBuilder: (_, animation, __, child) {
+              return FadeTransition(opacity: animation, child: child);
+            },
+          ),
+        );
+        return;
+      }
+    }
+
     await _finishStartup(started: started, isInitialized: isInitialized);
+  }
+
+  Future<void> _skipToLogin() async {
+    await _exitSplashSafely();
   }
 
   @override
@@ -286,7 +370,7 @@ class _SplashScreenState extends State<SplashScreen> {
                       ),
                       child: const Text('ลองใหม่'),
                     ),
-                  ] else
+                  ] else ...[
                     const SizedBox(
                       width: 36,
                       height: 36,
@@ -295,6 +379,27 @@ class _SplashScreenState extends State<SplashScreen> {
                         color: AppColors.white,
                       ),
                     ),
+                    const SizedBox(height: 12),
+                    Text(
+                      _status,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: AppColors.white.withValues(alpha: 0.75),
+                        fontSize: 13,
+                      ),
+                    ),
+                    if (_showSkip) ...[
+                      const SizedBox(height: 16),
+                      OutlinedButton(
+                        onPressed: _skipToLogin,
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.white,
+                          side: const BorderSide(color: AppColors.white),
+                        ),
+                        child: const Text('ข้าม — เข้าสู่ระบบ'),
+                      ),
+                    ],
+                  ],
                   const SizedBox(height: 16),
                   Text(
                     'v${AppConstants.appVersion}',

@@ -1016,7 +1016,7 @@ class DatabaseService {
 
   Future<DatabaseImportReport> inspectImportFile(String path) async {
     if (kIsWeb) {
-      return DatabaseImportReport(
+      return const DatabaseImportReport(
         ok: false,
         message: 'การนำเข้าไฟล์ .db ไม่รองรับบน Web',
         expectedVersion: _dbVersion,
@@ -1025,7 +1025,7 @@ class DatabaseService {
 
     final file = File(path);
     if (!await file.exists()) {
-      return DatabaseImportReport(
+      return const DatabaseImportReport(
         ok: false,
         message: 'ไม่พบไฟล์ที่เลือก',
         expectedVersion: _dbVersion,
@@ -1034,7 +1034,7 @@ class DatabaseService {
 
     final size = await file.length();
     if (size < 512) {
-      return DatabaseImportReport(
+      return const DatabaseImportReport(
         ok: false,
         message: 'ไฟล์ไม่ถูกต้อง (ขนาดเล็กเกินไป)',
         expectedVersion: _dbVersion,
@@ -1266,7 +1266,7 @@ class DatabaseService {
     if (!pre.ok) return pre;
 
     if (kIsWeb) {
-      return DatabaseImportReport(
+      return const DatabaseImportReport(
         ok: false,
         message: 'การนำเข้าไฟล์ .db ไม่รองรับบน Web',
         expectedVersion: _dbVersion,
