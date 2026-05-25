@@ -1,0 +1,6 @@
+{
+  "version": "1.0.1",
+  "build_number": 2,
+  "url": "https://ttmb-tech.com/license-services/release_mini_fuel_pos/mini-fuel-pos-v1.0.1.apk",
+  "changelog": "1. เพิ่มระบบติดตามข้อมูลอุปกรณ์และตำแหน่งที่ตั้ง (GPS)\n2. เพิ่มระบบแจ้งเตือนอัปเดตอัตโนมัติ\n3. แก้ไขข้อผิดพลาดทั่วไป"
+}

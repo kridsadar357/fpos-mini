@@ -1,0 +1,14 @@
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  errors:
+    # Keep builds green while developing — these are noisy for rapid iteration
+    deprecated_member_use: warning
+    prefer_const_constructors: warning
+
+linter:
+  rules:
+    avoid_print: false
+    sort_child_properties_last: true
+    prefer_single_quotes: false
+    use_key_in_widget_constructors: true

@@ -1,0 +1,4 @@
+#include? "Pods/Target Support Files/Pods-Runner/Pods-Runner.debug.xcconfig"
+#include "Generated.xcconfig"
+// เก็บ iOS build นอก Desktop — ป้องกัน codesign ล้ม + flutter clean ค้าง
+FLUTTER_BUILD_DIR=/tmp/fuel_pos_flutter_build

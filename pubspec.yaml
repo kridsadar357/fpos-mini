@@ -1,0 +1,87 @@
+name: fuel_pos
+description: Enterprise Fuel POS Mobile App with Bluetooth Printer, TTS, and Cloud Backup
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.1.0 <4.0.0'
+  flutter: ">=3.13.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.6
+  geolocator: ^11.0.0
+  package_info_plus: ^9.0.1
+
+  # State management
+  provider: ^6.1.1
+
+  # Database
+  sqflite: ^2.3.0
+  sqflite_common_ffi: ^2.3.0
+  sqflite_common_ffi_web: ^0.4.0
+  path_provider: ^2.1.1
+  path: ^1.8.3
+
+  # Bluetooth printer
+  print_bluetooth_thermal: ^1.1.0
+  esc_pos_utils: ^1.1.0
+  permission_handler: ^11.1.0
+
+  # TTS (Text to Speech)
+  flutter_tts: ^3.8.5
+
+  # Crypto (password hashing)
+  crypto: ^3.0.3
+
+  # File/Export/Import
+  file_picker: ^8.1.2
+  share_plus: ^7.2.1
+  csv: ^5.1.1
+
+  # Cloud backup (generic HTTPS uploader hook)
+  http: ^1.1.2
+  shared_preferences: ^2.2.2
+
+  # Charts for backend dashboard
+  fl_chart: ^0.65.0
+
+  # Date utilities
+  intl: ^0.18.1
+
+  # Device info (resolution calculation)
+  device_info_plus: ^9.1.1
+  url_launcher: ^6.2.5
+  image: ^3.3.0
+  image_picker: ^1.0.7
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+  flutter_launcher_icons: ^0.11.0
+
+flutter_icons:
+  android: true
+  ios: true
+  image_path: assets/images/app_logo.png
+  adaptive_icon_background: "#163172"
+  adaptive_icon_foreground: assets/images/app_logo.png
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/
+    - assets/images/app_logo.png
+    - assets/sounds/
+  fonts:
+    - family: Prompt
+      fonts:
+        - asset: assets/fonts/Prompt-Regular.ttf
+        - asset: assets/fonts/Prompt-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Prompt-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Prompt-Bold.ttf
+          weight: 700

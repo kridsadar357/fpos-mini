@@ -1,0 +1,36 @@
+class T {
+  static const String appTitle = 'OIL FUEL POS';
+  static const String selectDispenser = 'เลือกตู้จ่ายน้ำมัน';
+  static const String selectFuel = 'เลือกประเภทน้ำมัน';
+  static const String selectPayment = 'เลือกวิธีชำระเงิน';
+  static const String pump = 'ตู้ที่';
+  static const String nozzle = 'มือจ่ายที่';
+  static const String fuel = 'น้ำมัน';
+  static const String price = 'ราคา';
+  static const String perLiter = 'บาท/ลิตร';
+  static const String amount = 'จำนวนเงิน';
+  static const String liters = 'ลิตร';
+  static const String total = 'รวมทั้งสิ้น';
+  static const String cash = 'เงินสด';
+  static const String transfer = 'เงินโอน';
+  static const String creditCard = 'บัตรเครดิต';
+  static const String fleetCard = 'บัตรฟลีทการ์ด';
+  static const String discount = 'ส่วนลด';
+  static const String promotion = 'โปรโมชั่น';
+  static const String received = 'รับเงิน';
+  static const String change = 'เงินทอน';
+  static const String printReceipt = 'พิมพ์ใบเสร็จ';
+  static const String backend = 'หลังบ้าน';
+  static const String logout = 'ออกจากระบบ';
+  static const String confirm = 'ยืนยัน';
+  static const String cancel = 'ยกเลิก';
+  static const String tanks = 'ถังเก็บน้ำมัน';
+  static const String dispensers = 'ตู้จ่ายน้ำมัน';
+  static const String inventory = 'สต็อกน้ำมัน';
+  static const String status = 'สถานะ';
+  static const String cashier = 'พนักงาน';
+  static const String receiptNo = 'เลขที่ใบเสร็จ';
+  static const String date = 'วันที่';
+  static const String search = 'ค้นหา';
+  static const String settings = 'ตั้งค่า';
+}

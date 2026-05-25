@@ -1,0 +1,83 @@
+Package file_picker:linux references file_picker:linux as the default plugin, but it does not provide an inline implementation.
+Ask the maintainers of file_picker to either avoid referencing a default implementation via `platforms: linux: default_package: file_picker` or add an inline implementation to file_picker via `platforms: linux:` `pluginClass` or `dartPluginClass`.
+
+Package file_picker:macos references file_picker:macos as the default plugin, but it does not provide an inline implementation.
+Ask the maintainers of file_picker to either avoid referencing a default implementation via `platforms: macos: default_package: file_picker` or add an inline implementation to file_picker via `platforms: macos:` `pluginClass` or `dartPluginClass`.
+
+Package file_picker:windows references file_picker:windows as the default plugin, but it does not provide an inline implementation.
+Ask the maintainers of file_picker to either avoid referencing a default implementation via `platforms: windows: default_package: file_picker` or add an inline implementation to file_picker via `platforms: windows:` `pluginClass` or `dartPluginClass`.
+
+Package file_picker:linux references file_picker:linux as the default plugin, but it does not provide an inline implementation.
+Ask the maintainers of file_picker to either avoid referencing a default implementation via `platforms: linux: default_package: file_picker` or add an inline implementation to file_picker via `platforms: linux:` `pluginClass` or `dartPluginClass`.
+
+Package file_picker:macos references file_picker:macos as the default plugin, but it does not provide an inline implementation.
+Ask the maintainers of file_picker to either avoid referencing a default implementation via `platforms: macos: default_package: file_picker` or add an inline implementation to file_picker via `platforms: macos:` `pluginClass` or `dartPluginClass`.
+
+Package file_picker:windows references file_picker:windows as the default plugin, but it does not provide an inline implementation.
+Ask the maintainers of file_picker to either avoid referencing a default implementation via `platforms: windows: default_package: file_picker` or add an inline implementation to file_picker via `platforms: windows:` `pluginClass` or `dartPluginClass`.
+
+Package file_picker:linux references file_picker:linux as the default plugin, but it does not provide an inline implementation.
+Ask the maintainers of file_picker to either avoid referencing a default implementation via `platforms: linux: default_package: file_picker` or add an inline implementation to file_picker via `platforms: linux:` `pluginClass` or `dartPluginClass`.
+
+Package file_picker:macos references file_picker:macos as the default plugin, but it does not provide an inline implementation.
+Ask the maintainers of file_picker to either avoid referencing a default implementation via `platforms: macos: default_package: file_picker` or add an inline implementation to file_picker via `platforms: macos:` `pluginClass` or `dartPluginClass`.
+
+Package file_picker:windows references file_picker:windows as the default plugin, but it does not provide an inline implementation.
+Ask the maintainers of file_picker to either avoid referencing a default implementation via `platforms: windows: default_package: file_picker` or add an inline implementation to file_picker via `platforms: windows:` `pluginClass` or `dartPluginClass`.
+
+Package file_picker:linux references file_picker:linux as the default plugin, but it does not provide an inline implementation.
+Ask the maintainers of file_picker to either avoid referencing a default implementation via `platforms: linux: default_package: file_picker` or add an inline implementation to file_picker via `platforms: linux:` `pluginClass` or `dartPluginClass`.
+
+Package file_picker:macos references file_picker:macos as the default plugin, but it does not provide an inline implementation.
+Ask the maintainers of file_picker to either avoid referencing a default implementation via `platforms: macos: default_package: file_picker` or add an inline implementation to file_picker via `platforms: macos:` `pluginClass` or `dartPluginClass`.
+
+Package file_picker:windows references file_picker:windows as the default plugin, but it does not provide an inline implementation.
+Ask the maintainers of file_picker to either avoid referencing a default implementation via `platforms: windows: default_package: file_picker` or add an inline implementation to file_picker via `platforms: windows:` `pluginClass` or `dartPluginClass`.
+
+Warning: Building for device with codesigning disabled. You will have to manually codesign before deploying to device.
+Building com.example.fuelPos for device (ios-release)...
+Package file_picker:linux references file_picker:linux as the default plugin, but it does not provide an inline implementation.
+Ask the maintainers of file_picker to either avoid referencing a default implementation via `platforms: linux: default_package: file_picker` or add an inline implementation to file_picker via `platforms: linux:` `pluginClass` or `dartPluginClass`.
+
+Package file_picker:macos references file_picker:macos as the default plugin, but it does not provide an inline implementation.
+Ask the maintainers of file_picker to either avoid referencing a default implementation via `platforms: macos: default_package: file_picker` or add an inline implementation to file_picker via `platforms: macos:` `pluginClass` or `dartPluginClass`.
+
+Package file_picker:windows references file_picker:windows as the default plugin, but it does not provide an inline implementation.
+Ask the maintainers of file_picker to either avoid referencing a default implementation via `platforms: windows: default_package: file_picker` or add an inline implementation to file_picker via `platforms: windows:` `pluginClass` or `dartPluginClass`.
+
+Running Xcode build...                                          
+Xcode build done.                                           11.6s
+Failed to build iOS app
+Error output from Xcode build:
+↳
+    ** BUILD FAILED **
+
+
+Xcode's output:
+↳
+    Writing result bundle at path:
+    	/var/folders/cr/brmw9cwx73g6xwjx91k2y17r0000gn/T/flutter_tools.RTmY8C/flutter_ios_build_temp_dirrpxPXH/temporary_xcresult_bundle
+
+    lib/core/services/printer/printer_service_mobile.dart:41:71: Error: Member not found: 'pairedBluetoothDevices'.
+          final List<BluetoothInfo> devices = await PrintBluetoothThermal.pairedBluetoothDevices;
+                                                                          ^^^^^^^^^^^^^^^^^^^^^^
+    Target release_unpack_ios failed: Exception: Failed to codesign /Users/mac/Desktop/fuel_pos/build/ios/Release-iphoneos/Flutter.framework/Flutter with identity -.
+    /Users/mac/Desktop/fuel_pos/build/ios/Release-iphoneos/Flutter.framework/Flutter: replacing existing signature
+    /Users/mac/Desktop/fuel_pos/build/ios/Release-iphoneos/Flutter.framework/Flutter: resource fork, Finder information, or similar detritus not allowed
+
+    Target kernel_snapshot_program failed: Exception
+    Failed to package /Users/mac/Desktop/fuel_pos.
+    Command PhaseScriptExecution failed with a nonzero exit code
+    /Users/mac/Desktop/fuel_pos/ios/Pods/Pods.xcodeproj: warning: The iOS deployment target 'IPHONEOS_DEPLOYMENT_TARGET' is set to 9.0, but the range of supported deployment target versions is 12.0 to 26.0.99. (in target 'SwiftyGif-SwiftyGif' from project 'Pods')
+    /Users/mac/Desktop/fuel_pos/ios/Pods/Pods.xcodeproj: warning: The iOS deployment target 'IPHONEOS_DEPLOYMENT_TARGET' is set to 9.0, but the range of supported deployment target versions is 12.0 to 26.0.99. (in target 'permission_handler_apple-permission_handler_apple_privacy' from project 'Pods')
+    /Users/mac/Desktop/fuel_pos/ios/Pods/Pods.xcodeproj: warning: The iOS deployment target 'IPHONEOS_DEPLOYMENT_TARGET' is set to 9.0, but the range of supported deployment target versions is 12.0 to 26.0.99. (in target 'SDWebImage-SDWebImage' from project 'Pods')
+    /Users/mac/Desktop/fuel_pos/ios/Pods/Pods.xcodeproj: warning: The iOS deployment target 'IPHONEOS_DEPLOYMENT_TARGET' is set to 9.0, but the range of supported deployment target versions is 12.0 to 26.0.99. (in target 'SDWebImage' from project 'Pods')
+    /Users/mac/Desktop/fuel_pos/ios/Pods/Pods.xcodeproj: warning: The iOS deployment target 'IPHONEOS_DEPLOYMENT_TARGET' is set to 9.0, but the range of supported deployment target versions is 12.0 to 26.0.99. (in target 'SwiftyGif' from project 'Pods')
+    /Users/mac/Desktop/fuel_pos/ios/Pods/Pods.xcodeproj: warning: The iOS deployment target 'IPHONEOS_DEPLOYMENT_TARGET' is set to 9.0, but the range of supported deployment target versions is 12.0 to 26.0.99. (in target 'DKPhotoGallery-DKPhotoGallery' from project 'Pods')
+    /Users/mac/Desktop/fuel_pos/ios/Pods/Pods.xcodeproj: warning: The iOS deployment target 'IPHONEOS_DEPLOYMENT_TARGET' is set to 9.0, but the range of supported deployment target versions is 12.0 to 26.0.99. (in target 'DKPhotoGallery' from project 'Pods')
+    /Users/mac/Desktop/fuel_pos/ios/Pods/Pods.xcodeproj: warning: The iOS deployment target 'IPHONEOS_DEPLOYMENT_TARGET' is set to 9.0, but the range of supported deployment target versions is 12.0 to 26.0.99. (in target 'DKImagePickerController-DKImagePickerController' from project 'Pods')
+    /Users/mac/Desktop/fuel_pos/ios/Pods/Pods.xcodeproj: warning: The iOS deployment target 'IPHONEOS_DEPLOYMENT_TARGET' is set to 9.0, but the range of supported deployment target versions is 12.0 to 26.0.99. (in target 'DKImagePickerController' from project 'Pods')
+    note: Run script build phase 'Run Script' will be run during every build because the option to run the script phase "Based on dependency analysis" is unchecked. (in target 'Runner' from project 'Runner')
+    note: Run script build phase 'Thin Binary' will be run during every build because the option to run the script phase "Based on dependency analysis" is unchecked. (in target 'Runner' from project 'Runner')
+
+Encountered error while building for device.

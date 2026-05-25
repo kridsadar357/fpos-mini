@@ -1,0 +1,27 @@
+name: Flutter CI
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master, develop]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Analyze
+        run: flutter analyze --no-fatal-infos
+
+      - name: Run tests
+        run: flutter test --concurrency=1 test/money_utils_test.dart test/app_state_test.dart test/sale_shift_flow_test.dart test/backup_flow_test.dart test/shift_summary_test.dart test/license_grace_test.dart test/widget_test.dart
