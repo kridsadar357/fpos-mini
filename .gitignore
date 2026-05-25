@@ -23,8 +23,8 @@ ios/Flutter/* [0-9].*
 ios/Flutter/flutter_export_environment [0-9].sh
 
 # Backend — uploaded backup files (not in git)
-backend_license/storage/backups/*
-!backend_license/storage/backups/.gitkeep
+backend_license/backup_storage/*
+!backend_license/backup_storage/.gitkeep
 
 # IntelliJ related
 *.iml

@@ -2,7 +2,7 @@
 require_once __DIR__ . '/db_config.php';
 require_once __DIR__ . '/backup_config.php';
 
-function backup_json_response(int $code, array $payload): void
+function backup_json(int $code, array $payload): void
 {
     http_response_code($code);
     header('Content-Type: application/json; charset=utf-8');
@@ -10,135 +10,79 @@ function backup_json_response(int $code, array $payload): void
     exit;
 }
 
-function backup_read_bearer_token(): ?string
+function backup_error(int $code, string $message, array $extra = []): void
 {
-    $auth = $_SERVER['HTTP_AUTHORIZATION'] ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? '';
-    if (preg_match('/Bearer\s+(\S+)/i', $auth, $m)) {
-        return trim($m[1]);
+    backup_json($code, array_merge(['error' => $message], $extra));
+}
+
+function backup_read_token(): ?string
+{
+    $header = $_SERVER['HTTP_X_LICENSE_TOKEN'] ?? '';
+    if ($header !== '') {
+        return trim($header);
     }
 
-    $fallback = $_SERVER['HTTP_X_LICENSE_KEY'] ?? '';
-    return $fallback !== '' ? trim($fallback) : null;
+    if (!empty($_POST['token'])) {
+        return trim((string) $_POST['token']);
+    }
+
+    if (!empty($_GET['token'])) {
+        return trim((string) $_GET['token']);
+    }
+
+    return null;
 }
 
-function backup_license_allows_cloud(array $license): bool
+function backup_find_license(PDO $db, string $token): array
 {
-    $type = strtolower(trim($license['license_type'] ?? 'free'));
-    return in_array($type, BACKUP_ALLOWED_TYPES, true);
-}
-
-function backup_validate_license(PDO $db, string $licenseKey): array
-{
-    $stmt = $db->prepare('SELECT * FROM licenses WHERE license_key = ? LIMIT 1');
-    $stmt->execute([$licenseKey]);
+    $stmt = $db->prepare('SELECT * FROM licenses WHERE token = ? LIMIT 1');
+    $stmt->execute([$token]);
     $license = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$license) {
-        backup_json_response(401, [
-            'status' => 'error',
-            'message' => 'Invalid license key',
-        ]);
+        backup_error(403, 'Invalid license token');
     }
 
-    if (($license['status'] ?? '') !== 'active') {
-        backup_json_response(403, [
-            'status' => 'error',
-            'message' => 'License is not active',
-        ]);
+    $status = strtolower(trim($license['status'] ?? ''));
+    if ($status !== 'active') {
+        backup_error(403, 'License is not active', ['status' => $license['status']]);
     }
 
-    if (!backup_license_allows_cloud($license)) {
-        backup_json_response(403, [
-            'status' => 'error',
-            'message' => 'Cloud backup requires Pro or Enterprise license',
-        ]);
+    $expiry = $license['expires_at'] ?? $license['expiry_date'] ?? null;
+    if (!empty($expiry)) {
+        $expiryTs = strtotime((string) $expiry);
+        if ($expiryTs !== false && $expiryTs < time()) {
+            backup_error(403, 'License expired', ['expiry_date' => $expiry]);
+        }
     }
 
     return $license;
 }
 
-function backup_sanitize_filename(string $name): string
+function backup_sanitize_basename(string $name): string
 {
     $name = basename($name);
-    $name = preg_replace('/[^a-zA-Z0-9._-]+/', '_', $name) ?? 'fuel_pos_backup.db';
-    if (strlen($name) < 4 || substr(strtolower($name), -3) !== '.db') {
-        $name .= '.db';
+    $name = preg_replace('/[^a-zA-Z0-9._-]+/', '_', $name) ?? 'backup';
+    $name = trim($name, '._-');
+    return $name !== '' ? $name : 'backup';
+}
+
+function backup_allowed_extension(string $filename): ?string
+{
+    $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+    if ($ext === 'db' || $ext === 'sql') {
+        return $ext;
     }
-    return $name;
+    return null;
 }
 
-function backup_is_sqlite(string $bytes): bool
+function backup_storage_dir(int $licenseId): string
 {
-    return strncmp($bytes, 'SQLite format 3', 15) === 0;
-}
-
-function backup_ensure_storage_dir(string $licenseKey): string
-{
-    $dir = BACKUP_STORAGE_ROOT . '/' . hash('sha256', $licenseKey);
+    $dir = BACKUP_STORAGE_ROOT . '/' . $licenseId;
     if (!is_dir($dir) && !mkdir($dir, 0750, true) && !is_dir($dir)) {
-        backup_json_response(500, [
-            'status' => 'error',
-            'message' => 'Cannot create storage directory',
-        ]);
+        backup_error(500, 'Could not create backup directory');
     }
     return $dir;
-}
-
-function backup_trim_old_files(PDO $db, int $licenseId, string $dir): void
-{
-    $stmt = $db->prepare(
-        'SELECT id, stored_path FROM backup_uploads
-         WHERE license_id = ?
-         ORDER BY created_at DESC, id DESC'
-    );
-    $stmt->execute([$licenseId]);
-    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-    if (count($rows) <= BACKUP_KEEP_PER_LICENSE) {
-        return;
-    }
-
-    $toDelete = array_slice($rows, BACKUP_KEEP_PER_LICENSE);
-    $delStmt = $db->prepare('DELETE FROM backup_uploads WHERE id = ?');
-
-    foreach ($toDelete as $row) {
-        $path = $row['stored_path'];
-        if (is_string($path) && is_file($path)) {
-            @unlink($path);
-        }
-        $delStmt->execute([(int) $row['id']]);
-    }
-}
-
-function backup_record_upload(
-    PDO $db,
-    array $license,
-    string $storedPath,
-    string $fileName,
-    int $fileSize,
-    int $schemaVersion,
-    string $source,
-    ?string $deviceId
-): int {
-    $stmt = $db->prepare(
-        'INSERT INTO backup_uploads
-         (license_id, license_key, device_id, file_name, stored_path, file_size,
-          schema_version, source, client_ip, created_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())'
-    );
-    $stmt->execute([
-        (int) $license['id'],
-        $license['license_key'],
-        $deviceId,
-        $fileName,
-        $storedPath,
-        $fileSize,
-        $schemaVersion,
-        $source,
-        $_SERVER['REMOTE_ADDR'] ?? null,
-    ]);
-
-    return (int) $db->lastInsertId();
 }
 
 ?>

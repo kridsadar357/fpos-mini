@@ -258,6 +258,9 @@ class LicenseService {
             fromApi.isNotEmpty ? fromApi : 'standard';
         await _settings.set('license_key', key);
         await _settings.set('license_type', licenseType);
+        if (data['token'] != null) {
+          await _settings.set('license_token', data['token'].toString());
+        }
         await _settings.set('license_expiry', data['expires_at'] ?? '');
         await _settings.set('license_verified', 'true');
         await _markVerifiedNow();
@@ -269,6 +272,9 @@ class LicenseService {
       return {'success': false, 'message': 'Network error: $e'};
     }
   }
+
+  Future<String> getLicenseToken() async =>
+      await _settings.get('license_token', defaultValue: '');
 
   Future<String> getLicenseType() async {
     return await _settings.get('license_type', defaultValue: 'free');

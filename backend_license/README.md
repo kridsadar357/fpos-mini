@@ -1,88 +1,75 @@
 # FUEL POS — License & Cloud Backup Backend
 
-Deploy โฟลเดอร์นี้ไปที่ `https://ttmb-tech.com/license/` บนเซิร์ฟเวอร์ PHP + MySQL
+Reference implementation aligned with the production API on `ttmb-tech.com`.
 
-## Endpoints
+## Upload Backup
 
-| URL | ไฟล์ | วิธี |
-|-----|------|------|
-| `https://ttmb-tech.com/license/api.php` | (existing product verify) | GET |
-| `https://ttmb-tech.com/license/backup` | `backup/index.php` | POST |
+**`POST /license/backup/`**
 
-### Cloud backup — POST `/license/backup`
+Accepts a `.db` or `.sql` file and stores it under `backup_storage/<license_id>/`. Requires a valid `token` belonging to an `active`, non-expired license.
 
-**Auth:** `Authorization: Bearer {Product Key}` (License key จากแอป)
+### Request
 
-**Headers จากแอป:**
+`Content-Type: multipart/form-data`
 
+| Field | In | Required | Notes |
+| --- | --- | --- | --- |
+| `file` | form-data | yes | The `.db` or `.sql` file |
+| token | header `X-License-Token`, or form field `token`, or `?token=` | yes | Token returned by the verify endpoint |
+
+Example:
+
+```sh
+curl -X POST https://ttmb-tech.com/license/backup/ \
+  -H "X-License-Token: a1b2c3..." \
+  -F "file=@./mydata.db"
 ```
-Content-Type: application/octet-stream
-X-Backup-Source: fuel-pos
-X-Backup-Name: cloud_fuel_pos_....db
-X-Backup-Schema: 13
-X-Device-Id: {device_id}
-X-Backup-Attempt: 1
-```
 
-**Body:** ไฟล์ SQLite `.db` (binary)
+Saved as: `backup_storage/<license_id>/YYYYMMDD_HHMMSS_<sanitized-name>.<ext>`
 
-**Response 200:**
+### Response — 200 OK
 
 ```json
 {
-  "status": "success",
-  "message": "Backup received",
-  "upload_id": 12,
-  "file_size": 524288,
-  "stored_as": "2026-05-22_143000_cloud_fuel_pos....db",
-  "schema_version": 13
+  "success": true,
+  "license_id": 12,
+  "filename": "20260524_143015_mydata.db",
+  "size": 102400
 }
 ```
 
-**GET `/license/backup`** — health check (ไม่ต้อง auth)
+### Error responses
 
-## ติดตั้งครั้งแรก
+| Code | Body | Meaning |
+| --- | --- | --- |
+| 400 | `{ "error": "License token is required" }` | Token not provided |
+| 400 | `{ "error": "File upload failed", "upload_error": <code> }` | Missing file or PHP upload error |
+| 403 | `{ "error": "Invalid license token" }` | Token not found |
+| 403 | `{ "error": "License is not active", "status": "..." }` | Wrong status |
+| 403 | `{ "error": "License expired", "expiry_date": "..." }` | Past expiry |
+| 405 | `{ "error": "Method not allowed" }` | Non-POST request |
+| 415 | `{ "error": "Only .db and .sql files are allowed" }` | Bad extension |
+| 500 | `{ "error": "Could not create backup directory" }` | Filesystem error |
+| 500 | `{ "error": "Could not save uploaded file" }` | `move_uploaded_file` failed |
 
-1. สร้าง DB และ import `schema.sql`
-2. แก้ `db_config.php` (host, user, password)
-3. อัปโหลดไฟล์ทั้งโฟลเดอร์ `backend_license/` ไป `/license/`
-4. สร้างโฟลเดอร์ writable:
-   ```bash
-   chmod 750 storage/backups
-   chown www-data:www-data storage/backups
-   ```
-5. ใน MySQL รัน migration ถ้ามี DB เดิม:
-   ```sql
-   CREATE TABLE IF NOT EXISTS backup_uploads (...);  -- ดู schema.sql
-   ALTER TABLE licenses MODIFY license_type VARCHAR(20) NOT NULL DEFAULT 'free';
-   ```
+## Flutter app
 
-## ทดสอบด้วย curl
+- Endpoint default: `https://ttmb-tech.com/license/backup/`
+- Token: `license_token` from Product Key verify (not the Product Key itself)
+- Upload: `MultipartRequest` field `file` + header `X-License-Token`
 
-```bash
-curl -s "https://ttmb-tech.com/license/backup"
+## Deploy
 
-curl -X POST "https://ttmb-tech.com/license/backup" \
-  -H "Authorization: Bearer YOUR-PRO-LICENSE-KEY" \
-  -H "Content-Type: application/octet-stream" \
-  -H "X-Backup-Source: fuel-pos" \
-  -H "X-Backup-Name: test_backup.db" \
-  -H "X-Backup-Schema: 13" \
-  --data-binary @fuel_pos_backup.db
-```
+1. Upload `backend_license/` to `/license/` on the server
+2. Import / migrate `schema.sql` (licenses must include `token` column)
+3. Ensure `backup_storage/` is writable by PHP and not listable from web
+4. Set PHP `upload_max_filesize` / `post_max_size` for expected backup size
 
-## ความปลอดภัย
+## License status reference
 
-- ไฟล์เก็บใน `storage/backups/{sha256(license_key)}/` — ปิด direct access ด้วย `.htaccess`
-- รับเฉพาะ license ประเภท **pro** / **enterprise** ที่ status = active
-- จำกัดขนาด `BACKUP_MAX_BYTES` (default 50 MB) ใน `backup_config.php`
-- เก็บไฟล์ล่าสุด `BACKUP_KEEP_PER_LICENSE` ต่อ license (default 20)
-
-## แอป Flutter
-
-ค่า default ในแอป:
-
-- Endpoint: `https://ttmb-tech.com/license/backup`
-- Token: Product Key (License key) — กรอกอัตโนมัติถ้าว่าง
-
-เปิดใช้ที่ **หลังบ้าน → สำรองข้อมูล → สำรองคลาวด์** (ต้องมี License Pro+)
+| Status | Meaning |
+| --- | --- |
+| `pending` | Issued but never verified |
+| `active` | Usable |
+| `suspended` | Temporarily disabled |
+| `revoked` | Permanently disabled |

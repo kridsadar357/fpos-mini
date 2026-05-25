@@ -251,13 +251,42 @@ class BackupService {
     if (endpoint.isEmpty) {
       endpoint = AppConstants.cloudBackupEndpoint;
     }
+    if (!endpoint.endsWith('/')) {
+      endpoint = '$endpoint/';
+    }
 
     var token = await repo.get('backup_cloud_token', defaultValue: '');
     if (token.isEmpty) {
-      token = await repo.get('license_key', defaultValue: '');
+      token = await repo.get('license_token', defaultValue: '');
     }
 
     return (endpoint: endpoint, token: token);
+  }
+
+  String _parseCloudError(String body, int statusCode) {
+    if (body.isEmpty) return 'HTTP $statusCode';
+    try {
+      final data = jsonDecode(body);
+      if (data is Map && data['error'] != null) {
+        return data['error'].toString();
+      }
+    } catch (_) {}
+    return 'HTTP $statusCode';
+  }
+
+  bool _cloudUploadSucceeded(http.Response response) {
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      return false;
+    }
+    try {
+      final data = jsonDecode(response.body);
+      if (data is Map<String, dynamic>) {
+        return data['success'] == true;
+      }
+    } catch (_) {
+      return true;
+    }
+    return false;
   }
 
   Future<XFile?> exportLocal() async {
@@ -436,20 +465,26 @@ class BackupService {
 
     final creds = await _resolveCloudCredentials();
     final endpoint = creds.endpoint;
-    final token = creds.token;
+    var token = creds.token;
     if (endpoint.isEmpty) {
       await _recordCloudFailure('ยังไม่ได้ตั้งค่า endpoint');
       return (ok: false, message: 'No endpoint configured');
     }
     if (token.isEmpty) {
-      await _recordCloudFailure('ยังไม่ได้ตั้งค่า Product Key / Token');
+      try {
+        final refresh = await LicenseService.instance.refreshStoredLicense();
+        if (refresh['success'] == true) {
+          token = await repo.get('license_token', defaultValue: '');
+        }
+      } catch (_) {}
+    }
+    if (token.isEmpty) {
+      await _recordCloudFailure('ไม่มี License token — ตรวจสอบ Product Key ใหม่');
       return (
         ok: false,
-        message: 'กรุณากรอก Product Key ในหน้า License หรือ Token สำรองคลาวด์',
+        message: 'ไม่มี License token — ไปตั้งค่าทั่วไป → ตรวจสอบ License ใหม่',
       );
     }
-
-    final deviceId = await LicenseService.instance.getDeviceId();
 
     LocalBackupInfo? localInfo;
     if (requireLocalFirst) {
@@ -479,30 +514,34 @@ class BackupService {
 
     for (var attempt = 1; attempt <= _cloudMaxRetries; attempt++) {
       try {
-        final response = await http
-            .post(
-              Uri.parse(endpoint),
-              headers: {
-                'Content-Type': 'application/octet-stream',
-                'Authorization': 'Bearer $token',
-                'X-Backup-Source': 'fuel-pos',
-                'X-Backup-Name': localInfo.name,
-                'X-Backup-Schema': '${DatabaseService.schemaVersion}',
-                'X-Backup-Attempt': '$attempt',
-                'X-Device-Id': deviceId,
-              },
-              body: bytes,
-            )
-            .timeout(_cloudTimeout);
+        final request = http.MultipartRequest('POST', Uri.parse(endpoint))
+          ..headers['X-License-Token'] = token
+          ..files.add(
+            await http.MultipartFile.fromPath(
+              'file',
+              localInfo.path,
+              filename: localInfo.name,
+            ),
+          );
 
-        if (response.statusCode >= 200 && response.statusCode < 300) {
-          await _recordCloudSuccess(localInfo.name, bytes.length);
+        final streamed = await request.send().timeout(_cloudTimeout);
+        final response = await http.Response.fromStream(streamed);
+
+        if (_cloudUploadSucceeded(response)) {
+          var savedName = localInfo.name;
+          var savedSize = bytes.length;
+          try {
+            final data = jsonDecode(response.body) as Map<String, dynamic>;
+            savedName = data['filename']?.toString() ?? savedName;
+            savedSize = (data['size'] as num?)?.toInt() ?? savedSize;
+          } catch (_) {}
+          await _recordCloudSuccess(savedName, savedSize);
           return (
             ok: true,
-            message: 'อัปโหลดสำเร็จ (${bytes.length} bytes)',
+            message: 'อัปโหลดสำเร็จ ($savedSize bytes)',
           );
         }
-        lastError = 'HTTP ${response.statusCode}';
+        lastError = _parseCloudError(response.body, response.statusCode);
       } on TimeoutException {
         lastError = 'หมดเวลา (${_cloudTimeout.inSeconds}s)';
       } catch (e) {

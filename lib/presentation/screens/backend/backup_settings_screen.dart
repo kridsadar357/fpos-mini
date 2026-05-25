@@ -66,7 +66,7 @@ class _BackupSettingsScreenState extends State<BackupSettingsScreen> {
           : AppConstants.cloudBackupEndpoint;
       _token.text = all['backup_cloud_token']?.trim().isNotEmpty == true
           ? all['backup_cloud_token']!.trim()
-          : (all['license_key'] ?? '');
+          : (all['license_token'] ?? '');
       _lastBackup = all['last_local_backup_at'] ?? '-';
       _cloudStatus = all['last_cloud_backup_status'] ?? '-';
       _cloudError = all['last_cloud_backup_error'] ?? '';
@@ -584,7 +584,7 @@ class _BackupSettingsScreenState extends State<BackupSettingsScreen> {
                 isDense: true,
                 labelText: 'URL (HTTPS)',
                 hintText: AppConstants.cloudBackupEndpoint,
-                helperText: 'Token = Product Key (License) อัตโนมัติถ้าว่าง',
+                helperText: 'Token จาก verify License (ไม่ใช่ Product Key)',
                 labelStyle: TextStyle(fontSize: r.sp(11)),
               ),
             ),
@@ -595,8 +595,8 @@ class _BackupSettingsScreenState extends State<BackupSettingsScreen> {
               style: TextStyle(fontSize: r.sp(12)),
               decoration: InputDecoration(
                 isDense: true,
-                labelText: 'Token (Product Key)',
-                helperText: 'ใช้ License Key เป็น Bearer token',
+                labelText: 'Token (License token)',
+                helperText: 'ได้จาก verify Product Key — กรอกเองได้ถ้าต้องการ',
                 labelStyle: TextStyle(fontSize: r.sp(11)),
               ),
             ),

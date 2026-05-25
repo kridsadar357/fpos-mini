@@ -12,9 +12,9 @@ class AppConstants {
   /// แจ้งเตือนถ้าไม่ได้สำรองในเครื่องเกินจำนวนวันนี้
   static const int backupWarnDays = 3;
 
-  /// Cloud backup API (Pro+ license key as Bearer token)
+  /// Cloud backup API (Pro+ — uses license token from verify)
   static const String cloudBackupEndpoint =
-      'https://ttmb-tech.com/license/backup';
+      'https://ttmb-tech.com/license/backup/';
 
   // Default demo accounts — override in production via SQL seed
   static const String defaultAdminUsername = 'admin';
