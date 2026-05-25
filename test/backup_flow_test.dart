@@ -111,4 +111,12 @@ void main() {
       lessThanOrEqualTo(AppConstants.backupWarnDays),
     );
   });
+
+  test('ensureCloudToken reports missing token without refresh', () async {
+    final result = await BackupService.instance.ensureCloudToken(
+      refreshFromServer: false,
+    );
+    expect(result.ok, isFalse);
+    expect(result.tokenHint, isEmpty);
+  });
 }

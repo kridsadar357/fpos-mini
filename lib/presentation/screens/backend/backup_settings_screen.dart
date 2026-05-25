@@ -8,6 +8,7 @@ import '../../../core/constants/app_constants.dart';
 import '../../../core/constants/license_features.dart';
 import '../../../core/services/backup_service.dart';
 import '../../../core/services/database_service.dart';
+import '../../../core/services/license_service.dart';
 import '../../../core/utils/formatter.dart';
 import '../../../core/utils/responsive.dart';
 import '../../../core/utils/toast_utils.dart';
@@ -36,6 +37,7 @@ class _BackupSettingsScreenState extends State<BackupSettingsScreen> {
   String _lastBackup = '-';
   String _cloudStatus = '-';
   String _cloudError = '';
+  String _tokenHint = '';
   BackupHealthStatus? _backupHealth;
   List<LocalBackupInfo> _localBackups = [];
 
@@ -67,6 +69,10 @@ class _BackupSettingsScreenState extends State<BackupSettingsScreen> {
       _token.text = all['backup_cloud_token']?.trim().isNotEmpty == true
           ? all['backup_cloud_token']!.trim()
           : (all['license_token'] ?? '');
+      final tokenForHint = _token.text.trim();
+      _tokenHint = tokenForHint.isEmpty
+          ? ''
+          : LicenseService.tokenHint(tokenForHint);
       _lastBackup = all['last_local_backup_at'] ?? '-';
       _cloudStatus = all['last_cloud_backup_status'] ?? '-';
       _cloudError = all['last_cloud_backup_error'] ?? '';
@@ -146,6 +152,18 @@ class _BackupSettingsScreenState extends State<BackupSettingsScreen> {
       } else if (result.message != 'ยกเลิกการบันทึก') {
         ToastUtils.show(context, result.message);
       }
+      await _load();
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _syncCloudToken() async {
+    setState(() => _busy = true);
+    try {
+      final result = await BackupService.instance.ensureCloudToken();
+      if (!mounted) return;
+      ToastUtils.show(context, result.message);
       await _load();
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -600,9 +618,40 @@ class _BackupSettingsScreenState extends State<BackupSettingsScreen> {
                 labelStyle: TextStyle(fontSize: r.sp(11)),
               ),
             ),
+            if (_tokenHint.isNotEmpty) ...[
+              SizedBox(height: r.h(4)),
+              Text(
+                'Token ปัจจุบัน: $_tokenHint',
+                style: TextStyle(
+                  fontSize: r.sp(10),
+                  color: AppColors.success,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ] else ...[
+              SizedBox(height: r.h(4)),
+              Text(
+                'ยังไม่มี token — กด「ซิงค์ token」หรือวางจาก hosting DB',
+                style: TextStyle(
+                  fontSize: r.sp(10),
+                  color: AppColors.danger,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
             SizedBox(height: r.h(8)),
             Row(
               children: [
+                Expanded(
+                  child: _compactBtn(
+                    r: r,
+                    label: 'ซิงค์ token',
+                    icon: Icons.sync_rounded,
+                    loading: _busy,
+                    onPressed: _syncCloudToken,
+                  ),
+                ),
+                SizedBox(width: r.w(8)),
                 Expanded(
                   child: _compactBtn(
                     r: r,
@@ -613,7 +662,11 @@ class _BackupSettingsScreenState extends State<BackupSettingsScreen> {
                     onPressed: _cloudEnabled ? _uploadCloud : null,
                   ),
                 ),
-                SizedBox(width: r.w(8)),
+              ],
+            ),
+            SizedBox(height: r.h(6)),
+            Row(
+              children: [
                 Expanded(
                   child: _compactBtn(
                     r: r,
@@ -622,6 +675,8 @@ class _BackupSettingsScreenState extends State<BackupSettingsScreen> {
                     onPressed: _save,
                   ),
                 ),
+                SizedBox(width: r.w(8)),
+                const Expanded(child: SizedBox()),
               ],
             ),
           ],

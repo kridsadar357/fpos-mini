@@ -64,6 +64,13 @@ Saved as: `backup_storage/<license_id>/YYYYMMDD_HHMMSS_<sanitized-name>.<ext>`
 2. Import / migrate `schema.sql` (licenses must include `token` column)
 3. Ensure `backup_storage/` is writable by PHP and not listable from web
 4. Set PHP `upload_max_filesize` / `post_max_size` for expected backup size
+5. Admin: `/license/admin/` — จัดการ license + ดู backup ที่ `/license/admin/backups.php`
+
+### ใช้ token จาก hosting DB ในแอป
+
+1. ตรวจว่า verify API ส่ง `"token"` ใน JSON response
+2. แอป → **ตั้งค่าทั่วไป → ตรวจสอบ License ใหม่** (เก็บ `license_token` อัตโนมัติ)
+3. หรือ **สำรองข้อมูล → คลาวด์ → ซิงค์ token** / วาง token จาก DB เอง
 
 ## License status reference
 

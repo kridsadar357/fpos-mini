@@ -40,6 +40,8 @@ class _GeneralSettingsScreenState extends State<GeneralSettingsScreen> {
   bool _licenseVerified = false;
   String _licenseCustomer = '';
   String _licenseExpiry = '';
+  String _licenseTokenHint = '';
+  bool _hasLicenseToken = false;
   String _licenseGraceMessage = '';
   bool _licenseGraceActive = false;
   bool _licenseGraceExpired = false;
@@ -86,6 +88,8 @@ class _GeneralSettingsScreenState extends State<GeneralSettingsScreen> {
       _licenseVerified = license['verified'] == 'true';
       _licenseCustomer = license['customer_name'] ?? '';
       _licenseExpiry = license['expiry'] ?? '';
+      _licenseTokenHint = license['token_hint'] ?? '';
+      _hasLicenseToken = license['has_token'] == 'true';
       _licenseGraceActive = grace.active;
       _licenseGraceExpired = grace.expired && _licenseVerified;
       _licenseGraceMessage = grace.displayMessage;
@@ -136,6 +140,8 @@ class _GeneralSettingsScreenState extends State<GeneralSettingsScreen> {
           _licenseVerified = license['verified'] == 'true';
           _licenseCustomer = license['customer_name'] ?? '';
           _licenseExpiry = license['expiry'] ?? '';
+          _licenseTokenHint = license['token_hint'] ?? '';
+          _hasLicenseToken = license['has_token'] == 'true';
           _licenseGraceActive = grace.active;
           _licenseGraceExpired = false;
           _licenseGraceMessage = grace.displayMessage;
@@ -331,6 +337,15 @@ class _GeneralSettingsScreenState extends State<GeneralSettingsScreen> {
             icon: Icons.inventory_2_outlined,
             label: 'Package',
             value: _packageLabel,
+          ),
+          SizedBox(height: r.h(8)),
+          _InfoTile(
+            r: r,
+            icon: Icons.cloud_circle_outlined,
+            label: 'Cloud token',
+            value: _hasLicenseToken
+                ? '${_licenseTokenHint} (พร้อมสำรองคลาวด์)'
+                : 'ยังไม่มี — กดตรวจสอบ License ใหม่',
           ),
           if (_licenseCustomer.isNotEmpty) ...[
             SizedBox(height: r.h(8)),

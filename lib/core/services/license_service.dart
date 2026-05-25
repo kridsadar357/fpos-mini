@@ -286,6 +286,7 @@ class LicenseService {
   }
 
   Future<Map<String, String>> getStoredLicenseInfo() async {
+    final token = await getLicenseToken();
     return {
       'key': await _settings.get('license_key', defaultValue: ''),
       'type': await _settings.get('license_type', defaultValue: 'free'),
@@ -294,7 +295,16 @@ class LicenseService {
       'customer_name':
           await _settings.get('license_customer_name', defaultValue: ''),
       'expiry': await _settings.get('license_expiry', defaultValue: ''),
+      'token': token,
+      'token_hint': tokenHint(token),
+      'has_token': token.isNotEmpty ? 'true' : 'false',
     };
+  }
+
+  static String tokenHint(String token) {
+    if (token.isEmpty) return '';
+    if (token.length <= 8) return '••••••••';
+    return '••••${token.substring(token.length - 6)}';
   }
 
   /// Re-verify stored key against server (sync package/tier).

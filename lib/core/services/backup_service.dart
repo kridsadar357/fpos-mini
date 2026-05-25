@@ -289,6 +289,60 @@ class BackupService {
     return false;
   }
 
+  /// ใช้ token จาก hosting DB — ดึงจาก settings หรือ refresh verify
+  Future<({bool ok, String message, String tokenHint})> ensureCloudToken({
+    bool refreshFromServer = true,
+  }) async {
+    final repo = SettingsRepository();
+    var token = await repo.get('backup_cloud_token', defaultValue: '');
+    if (token.isEmpty) {
+      token = await repo.get('license_token', defaultValue: '');
+    }
+
+    if (token.isNotEmpty) {
+      return (
+        ok: true,
+        message: 'มี License token พร้อมใช้งาน',
+        tokenHint: LicenseService.tokenHint(token),
+      );
+    }
+
+    if (!refreshFromServer) {
+      return (
+        ok: false,
+        message: 'ยังไม่มี token — กดซิงค์จาก License หรือวาง token จาก hosting',
+        tokenHint: '',
+      );
+    }
+
+    final refresh = await LicenseService.instance.refreshStoredLicense();
+    if (refresh['success'] == true) {
+      token = await repo.get('license_token', defaultValue: '');
+      if (token.isEmpty) {
+        token = await repo.get('backup_cloud_token', defaultValue: '');
+      }
+      if (token.isNotEmpty) {
+        return (
+          ok: true,
+          message: 'ดึง token จาก server สำเร็จ',
+          tokenHint: LicenseService.tokenHint(token),
+        );
+      }
+      return (
+        ok: false,
+        message:
+            'verify สำเร็จแต่ server ไม่ส่ง token — วาง token จาก hosting DB เอง',
+        tokenHint: '',
+      );
+    }
+
+    return (
+      ok: false,
+      message: refresh['message']?.toString() ?? 'ซิงค์ License ไม่สำเร็จ',
+      tokenHint: '',
+    );
+  }
+
   Future<XFile?> exportLocal() async {
     final info = await saveToLocalStorage();
     if (info == null) return null;
