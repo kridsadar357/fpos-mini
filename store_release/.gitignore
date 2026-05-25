@@ -1,0 +1,5 @@
+# Store upload artifacts (generated — do not commit secrets)
+
+*.aab
+*.ipa
+SIGNING_CREDENTIALS.txt

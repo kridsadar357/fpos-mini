@@ -1,0 +1,15 @@
+FUEL POS — Store upload bundle
+Built: Mon May 25 15:16:50 +07 2026
+Version: 1.0.0+1
+Android applicationId: com.ttmbtech.fuelpos
+iOS bundleId: com.ttmbtech.fuelpos
+Apple Team ID: JGZ59SA7RF
+
+Files:
+  fuelpos-1.0.0+1.aab  → Google Play Console → Production → Create release → Upload
+  fuelpos-1.0.0+1.ipa  → Transporter app หรือ Xcode Organizer → Distribute App
+
+Before first upload:
+  1. สร้าง App ใน App Store Connect (bundle com.ttmbtech.fuelpos)
+  2. สร้าง App ใน Google Play Console (package com.ttmbtech.fuelpos)
+  3. อ่าน store_release/SUBMISSION_CHECKLIST.md

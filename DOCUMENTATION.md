@@ -385,6 +385,8 @@ flutter test --concurrency=1 test/
   ./scripts/run_ios_release.sh -d <device-id>        # release — ไม่ค้าง Installing and launching
   ./scripts/install_ios.sh [device-id]             # ติดตั้งแล้วเปิดแอปบน iPad เอง
   ./scripts/stop_ios_app.sh [kill|uninstall|force] # บังคับปิด / ถอนแอปเมื่อ iPad ค้าง
+  ./scripts/build_store_release.sh                  # สร้าง .aab + .ipa ใน store_release/
+  ./scripts/setup_android_signing.sh              # สร้าง keystore Play Store (ครั้งแรก)
   ./scripts/prepare_ios_build.sh                   # ก่อน build/run ทุกครั้ง
   ```
 - **อย่า** `xattr -cr` บนโฟลเดอร์ `build/` หรือ `BUILT_PRODUCTS_DIR` หลัง codesign — จะทำให้ `Info.plist` invalid และติดตั้ง iPad ไม่ได้

@@ -1,4 +1,4 @@
-package com.example.fuel_pos
+package com.ttmbtech.fuelpos
 
 import io.flutter.embedding.android.FlutterActivity
 

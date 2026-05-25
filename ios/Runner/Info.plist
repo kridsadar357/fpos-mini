@@ -46,10 +46,10 @@
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>NSBluetoothAlwaysUsageDescription</key>
-	<string>This app needs Bluetooth to connect to thermal printers.</string>
+	<string>แอปใช้ Bluetooth เชื่อมต่อเครื่องพิมพ์ใบเสร็จความร้อน</string>
 	<key>NSBluetoothPeripheralUsageDescription</key>
-	<string>This app needs Bluetooth to connect to thermal printers.</string>
+	<string>แอปใช้ Bluetooth เชื่อมต่อเครื่องพิมพ์ใบเสร็จความร้อน</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>This app needs location access to scan for Bluetooth devices.</string>
+	<string>แอปใช้ตำแหน่งเพื่อค้นหาอุปกรณ์ Bluetooth ใกล้เคียง (ตามข้อกำหนด Android/iOS)</string>
 </dict>
 </plist>
