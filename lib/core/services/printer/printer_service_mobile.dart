@@ -132,6 +132,10 @@ class BluetoothPrinterService {
 
   Future<bool> _ensureConnected({bool reconnect = false}) async {
     if (!await ensurePermissions()) return false;
+    // Some Bluetooth printer integrations report `connectionStatus` unreliably.
+    // If we already have a target device from `connectTo()`, allow writes even
+    // when `connectionStatus` is temporarily false.
+    if (!reconnect && _device != null) return true;
     if (!reconnect && await isConnected) return true;
     if (reconnect) await disconnect();
     return connectLastUsed();
@@ -166,10 +170,15 @@ class BluetoothPrinterService {
     final repo = SettingsRepository();
     final mac = await repo.get('printer_mac', defaultValue: '');
     if (mac.isEmpty) return false;
-    final devices = await listBondedDevices();
-    final match = devices.where((d) => d.address == mac).toList();
-    if (match.isEmpty) return false;
-    return connectTo(match.first);
+    // Avoid relying on `pairedBluetooths` which can be empty/unavailable on
+    // some devices (especially certain BLE printer cases).
+    final name = await repo.get('printer_name', defaultValue: 'Printer');
+    return connectTo(
+      BluetoothDevice(
+        address: mac,
+        name: name.trim().isEmpty ? null : name,
+      ),
+    );
   }
 
   Future<void> disconnect() async {
